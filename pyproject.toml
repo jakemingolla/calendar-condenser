@@ -1,0 +1,38 @@
+[project]
+name = "python-template"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13.5"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.31.1",
+    "pytest>=8.4.1",
+    "ruff>=0.12.7",
+]
+
+[tool.basedpyright]
+include = ["src/", "test/"]
+exclude = ["**/__pycache__"]
+typeCheckingMode = "strict"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+select = [
+    "ALL"
+]
+
+ignore = [
+    "D100", # Missing docstring in public module
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D203", # Incorrect blank line before class
+    "D213", # Multiline-summary second line
+    "S101", # Use of `assert` detected
+    "T201", # `print` found
+]

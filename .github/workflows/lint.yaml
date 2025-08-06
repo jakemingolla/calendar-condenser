@@ -1,0 +1,21 @@
+name: 🚨 Lint
+on: pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          version: "0.7.21"
+
+      - name: 📦 Install Dependencies
+        run: uv sync --frozen --dev
+
+      - name: 🚨 Lint
+        run: uv run basedpyright
