@@ -1,5 +1,4 @@
 .ONESHELL:
-SHELL = /bin/zsh
 .SHELLFLAGS = -e
 
 .PHONY: help install run lint test
