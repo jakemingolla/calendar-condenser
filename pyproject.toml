@@ -4,7 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13.5"
-dependencies = []
+dependencies = [
+    "langchain>=0.3.27",
+    "langchain-ollama>=0.3.6",
+    "pydantic>=2.11.7",
+]
 
 [dependency-groups]
 dev = [
@@ -15,11 +19,20 @@ dev = [
 
 [tool.basedpyright]
 include = ["src/", "test/"]
-exclude = ["**/__pycache__"]
+exclude = ["**/__pycache__", "typings"]
 typeCheckingMode = "strict"
 
+# Allow implicit string concatenation for building prompts
+reportImplicitStringConcatenation = false
+# Allow multiple classes to be inherited even if it's unsafe (seems to be working fine)
+reportUnsafeMultipleInheritance = false
+# Allow for incompletely typed external packages
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+
 [tool.ruff]
-line-length = 88
+exclude = ["typings"]
+line-length = 100
 indent-width = 4
 
 [tool.ruff.lint]
@@ -28,7 +41,9 @@ select = [
 ]
 
 ignore = [
+    "TD", "FIX", # all TODO comment requirements
     "D100", # Missing docstring in public module
+    "D101", #Missing docstring in public class
     "D103", # Missing docstring in public function
     "D104", # Missing docstring in public package
     "D203", # Incorrect blank line before class
@@ -36,3 +51,6 @@ ignore = [
     "S101", # Use of `assert` detected
     "T201", # `print` found
 ]
+
+[tool.ruff.lint.flake8-builtins]
+allowed-modules = ["types"]

@@ -8,14 +8,22 @@ jobs:
       - name: 🏗 Checkout Repo
         uses: actions/checkout@v4
 
+      - name: "🐍 Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
       - name: 🔧 Setup UV
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
           version: "0.7.21"
 
+      - name: "👾 Create virtual environment"
+        run: uv venv
+
       - name: 📦 Install Dependencies
-        run: uv sync --frozen --dev
+        run: make install
 
       - name: 🚨 Lint
-        run: uv run basedpyright
+        run: make lint
