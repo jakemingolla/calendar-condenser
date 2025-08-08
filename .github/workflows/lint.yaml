@@ -19,6 +19,9 @@ jobs:
           enable-cache: true
           version: "0.7.21"
 
+      - name: "👾 Create virtual environment"
+        run: uv venv
+
       - name: 📦 Install Dependencies
         run: make install
 
