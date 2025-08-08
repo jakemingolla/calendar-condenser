@@ -1,33 +1,19 @@
-.ONESHELL:
-.SHELLFLAGS = -e
+.PHONY: uv
+uv:  ## Install uv if it's not present.
+	@command -v uv >/dev/null 2>&1 || curl -LsSf https://astral.sh/uv/$(cat .uv-version)/install.sh | sh
 
-.PHONY: help install run lint test
-
-virtual_environment_directory = .venv
-
-help:
-	@echo "Usage: make <target>"
-	@echo "Targets:"
-	@echo "  help - Show this help message"
-	@echo "  install - Install dependencies"
-	@echo "  run - Run the project"
-	@echo "  lint - Run linting"
-	@echo "  test - Run tests"
-
-$(virtual_environment_directory):
-	uv venv
-
-install: $(virtual_environment_directory)
+.PHONY: install
+install: uv ## Install dependencies
 	uv sync --frozen
 
-run: $(virtual_environment_directory)
-	@. $(virtual_environment_directory)/bin/activate && python -m src.main
+.PHONY: test
+test:  ## Run tests
+	uv run pytest
 
-lint:
-	@. $(virtual_environment_directory)/bin/activate; \
-	ruff check; \
-	basedpyright
+.PHONY: lint
+lint:  ## Run linters
+	uv run ruff check && uv run basedpyright
 
-test:
-	@. $(virtual_environment_directory)/bin/activate; \
-	pytest
+.PHONY: run
+run:  ## Run the project
+	uv run python -m src.main
