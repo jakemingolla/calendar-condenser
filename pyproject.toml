@@ -19,11 +19,20 @@ dev = [
 
 [tool.basedpyright]
 include = ["src/", "test/"]
-exclude = ["**/__pycache__"]
+exclude = ["**/__pycache__", "typings"]
 typeCheckingMode = "strict"
 
+# Allow implicit string concatenation for building prompts
+reportImplicitStringConcatenation = false
+# Allow multiple classes to be inherited even if it's unsafe (seems to be working fine)
+reportUnsafeMultipleInheritance = false
+# Allow for incompletely typed external packages
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+
 [tool.ruff]
-line-length = 88
+exclude = ["typings"]
+line-length = 100
 indent-width = 4
 
 [tool.ruff.lint]
