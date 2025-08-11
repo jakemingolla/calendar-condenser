@@ -17,6 +17,7 @@ from src.types.user import User, UserId
 llm = ChatOllama(
     model="gpt-oss:20b",
     temperature=0,
+    reasoning=True,
 )
 
 user_id = UserId(uuid4())
@@ -75,12 +76,3 @@ prompt = ChatPromptTemplate.from_messages(
 tools = [get_events_on_date]
 agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools)
-
-
-def main() -> None:
-    results = agent_executor.invoke({"input": "How many events do I have today?"})
-    print(results)
-
-
-if __name__ == "__main__":
-    main()
