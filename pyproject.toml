@@ -8,6 +8,7 @@ dependencies = [
     "fastapi[standard]>=0.116.1",
     "langchain>=0.3.27",
     "langchain-ollama>=0.3.6",
+    "langgraph>=0.6.4",
     "pydantic>=2.11.7",
 ]
 
@@ -31,10 +32,11 @@ reportUnsafeMultipleInheritance = false
 # Allow for incompletely typed external packages
 reportUnknownVariableType = false
 reportUnknownMemberType = false
+reportMissingTypeStubs = false
 
 [tool.ruff]
 exclude = ["typings"]
-line-length = 100
+line-length = 120
 indent-width = 4
 
 [tool.ruff.lint]

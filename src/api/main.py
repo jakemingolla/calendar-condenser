@@ -1,4 +1,3 @@
-import json
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -6,8 +5,10 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from langchain.load import dumps
 
-from src.main import agent_executor
+from src.agents.calendar import CalendarAgent
+from src.graph.mock_data import me, my_calendar
 
+calendar_agent = CalendarAgent(user=me, calendar=my_calendar)
 app = FastAPI()
 
 
@@ -17,7 +18,7 @@ async def root() -> dict[str, str]:
 
 
 async def invoke_agent(input: str) -> AsyncGenerator[str, Any]:
-    async for raw in agent_executor.astream_events(
+    async for raw in calendar_agent.executor.astream_events(
         input={"input": input},
         include_types=[
             "chat_model",
@@ -25,18 +26,6 @@ async def invoke_agent(input: str) -> AsyncGenerator[str, Any]:
         ],
     ):
         yield dumps(raw) + "\n"
-        continue
-        event = raw["event"]
-        data = raw["data"]
-        yield (
-            json.dumps(
-                {
-                    "event": event,
-                    "data": dumps(data),
-                },
-            )
-            + "\n"
-        )
 
 
 @app.get("/stream")

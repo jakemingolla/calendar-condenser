@@ -76,7 +76,7 @@ async def main() -> None:
     console = Console()
     async with httpx.AsyncClient() as client:
         with Live(console=console) as live:
-            response = await client.get(f"{BASE_URL}/stream")
+            response = await client.get(f"{BASE_URL}/stream", timeout=None)
             async for line in response.aiter_lines():
                 await asyncio.sleep(0.1)
                 parsed = json.loads(line)
