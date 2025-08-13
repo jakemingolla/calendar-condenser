@@ -1,25 +1,16 @@
-import asyncio
 from collections.abc import Sequence
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from src.graph.mock_data import adams_calendar, adams_user, me, my_calendar, sallys_calendar, sallys_user
 from src.types.calendar import Calendar, CalendarEvent
+from src.types.rescheduled_event import PendingRescheduledEvent
 from src.types.user import User
 
 
-class RescheduledEvent(BaseModel):
-    event_id: str = Field(description="The event ID which will be moved. This MUST correspond to an existing event ID.")
-    new_start_time: datetime = Field(description="The new start time for the event.")
-    new_end_time: datetime = Field(description="The new end time for the event.")
-    explanation: str = Field(description="A detailed explanation of the rescheduling proposal.")
-
-
 class ReschedulingProposal(BaseModel):
-    events: list[RescheduledEvent] = Field(description="List of events to be rescheduled")
+    events: list[PendingRescheduledEvent] = Field(description="List of events to be rescheduled")
 
 
 llm = ChatOpenAI(model="gpt-4o-mini")
@@ -55,12 +46,12 @@ def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: C
     )
 
 
-async def generate_rescheduling_proposal(
+async def generate_rescheduling_proposals(
     date: datetime,
     user: User,
     users_calendar: Calendar,
     other_invitees: Sequence[tuple[User, Calendar]],
-) -> list[RescheduledEvent]:
+) -> list[PendingRescheduledEvent]:
     """Generate a rescheduling proposal for a calendar event."""
     users_events = users_calendar.get_events_on(date)
     prompt_str = "".join(
@@ -115,30 +106,3 @@ async def generate_rescheduling_proposal(
         return response.events
     msg = f"Response is not a ReschedulingProposal object: {response}"
     raise TypeError(msg)
-
-
-async def main() -> None:
-    date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
-    other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]
-    rescheduling_proposals = await generate_rescheduling_proposal(date, me, my_calendar, other_invitees)
-
-    print("--------------------------------")
-    print("My calendar events:")
-    for event in my_calendar.get_events_on(date):
-        print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]} | {event.title}")
-    for invitee, calendar in other_invitees:
-        print()
-        print(f"{invitee.given_name}'s calendar events:")
-        for event in calendar.events:
-            print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]} | {event.title}")
-    print()
-    print("Rescheduling proposals:")
-    for proposal in rescheduling_proposals:
-        print("Event ID:", str(proposal.event_id)[:8])
-        print("New start time:", proposal.new_start_time.hour)
-        print("New end time:", proposal.new_end_time.hour)
-        print("Explanation:", proposal.explanation)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
