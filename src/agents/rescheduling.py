@@ -3,8 +3,8 @@ from collections.abc import Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from langchain_ollama import ChatOllama
-from pydantic import BaseModel, Field, TypeAdapter
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 
 from src.graph.mock_data import adams_calendar, adams_user, me, my_calendar, sallys_calendar, sallys_user
 from src.types.calendar import Calendar, CalendarEvent
@@ -18,21 +18,19 @@ class RescheduledEvent(BaseModel):
     explanation: str = Field(description="A detailed explanation of the rescheduling proposal.")
 
 
-llm = ChatOllama(model="llama3.1")
-structured_llm = llm.with_structured_output(
-    {
-        "type": "array",
-        "items": TypeAdapter(RescheduledEvent).json_schema(),
-    },
-    method="json_schema",
-)
+class ReschedulingProposal(BaseModel):
+    events: list[RescheduledEvent] = Field(description="List of events to be rescheduled")
+
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+structured_llm = llm.with_structured_output(ReschedulingProposal, method="json_schema")
 
 
 def serialize_event(event: CalendarEvent) -> str:
     s = f"""
 Event ID: {str(event.id)[:8]}
-Start time: {event.start_time.hour}:00
-End time: {event.end_time.hour}:00
+Start time: {event.start_time.strftime("%Y-%m-%d %H:%M")}
+End time: {event.end_time.strftime("%Y-%m-%d %H:%M")}
 Title: {event.title}
 Description: {event.description}
 Owner's User ID: {str(event.owner)[:8]}
@@ -72,12 +70,14 @@ async def generate_rescheduling_proposal(
             f"- The current date is {date.strftime('%Y-%m-%d')}.\n"
             f"- You are speaking with {user.given_name}. Their user ID is {str(user.id)[:8]}.\n"
             f"- The user's timezone is {user.timezone}.\n",
+            "- All times mentioned are in the user's local timezone on the current date.\n",
             "- The user's work hours are from 9am to 5pm in their local timezone.\n",
             "- You will be given a list of calendar events for the user and a list of all invitees and their events.\n",
             "\n",
-            "TASK:\n",
-            f"- Reschedule one or more events to make {user.given_name}'s schedule as uninterrupted as possible.\n",
-            "- To reschedule an event, you MUST choose a new start and end time for the event.\n",
+            "CORE OBJECTIVE:\n",
+            f"- Reschedule one or more events to minimize gaps between consecutive events on {user.given_name}'s calendar.\n",
+            "- Your goal is to create the most efficient, back-to-back schedule as possible while respecting all rules.\n",
+            "- When rescheduling an event, you MUST choose a completelydifferent start and end time for the event.\n",
             "\n",
             "RULES: (All of these rules MUST be followed.)\n",
             f"- You MUST reschedule at least one event on {user.given_name}'s calendar.\n",
@@ -85,13 +85,18 @@ async def generate_rescheduling_proposal(
             "- A rescheduled event MUST NOT conflict with any event on any other user's calendar.\n",
             "- An event owned by another person MUST NOT be rescheduled.\n",
             "- A rescheduled event MUST have its start and end times within the user's work hours.\n",
-            "- The rescheduled event MUST be scheduled for the same day as the original event.\n"
-            "- DO NOT reschedule an event if it does not need to be rescheduled.\n"
+            "- The rescheduled event MUST be scheduled for the same day as the original event.\n",
+            "- DO NOT reschedule an event if it does not need to be rescheduled.\n",
+            "- Events must maintain their original duration.\n",
+            "- Events cannot be split or merged.\n",
             "\n",
-            "PRIORITIES (in order of importance):\n"
-            "- Minimize the amount of unscheduled time between events.\n"
-            "- Minimize the number of events that need to be rescheduled.\n"
-            "- Events later in the day should be rescheduled to be earlier in the day.\n"
+            "PRIORITIES (in order of importance):\n",
+            "- Minimize the amount of unscheduled time between events.\n",
+            "- Minimize the number of events that need to be rescheduled.\n",
+            "- Events later in the day should be rescheduled to be earlier in the day.\n",
+            "SAFETY CHECKS (performed after determining each rescheduled event):\n",
+            "- Verify the rescheduled event does not create any new conflicts.\n",
+            "- Ensure all invitees remain available at new times.\n",
             "\n",
             f"{user.given_name}'s events to potentially reschedule:\n",
             f"{''.join(serialize_event(event) for event in users_events)}",
@@ -101,12 +106,15 @@ async def generate_rescheduling_proposal(
                 for invitee, invitees_calendar in other_invitees
             ),
             "\n",
-            "You MUST give your response now. Do not include any other text in your response.",
+            "You MUST give your response now - return a list of rescheduled events.",
         ),
     )
-    print(prompt_str)
     response = await structured_llm.ainvoke(prompt_str)
-    return [RescheduledEvent.model_validate(event) for event in response]
+
+    if isinstance(response, ReschedulingProposal):
+        return response.events
+    msg = f"Response is not a ReschedulingProposal object: {response}"
+    raise TypeError(msg)
 
 
 async def main() -> None:
