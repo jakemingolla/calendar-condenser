@@ -54,6 +54,7 @@ ignore = [
     "D203", # Incorrect blank line before class
     "D213", # Multiline-summary second line
     "S101", # Use of `assert` detected
+    "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
     "T201", # `print` found
     "TRY003", # Avoid specifying long messages outside the exception class
 ]

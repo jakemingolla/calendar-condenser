@@ -4,13 +4,22 @@ from datetime import datetime
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from src.types.calendar import Calendar, CalendarEvent
+from src.types.calendar import Calendar
+from src.types.calendar_event import CalendarEvent, CalendarEventId
 from src.types.rescheduled_event import PendingRescheduledEvent
 from src.types.user import User
 
 
+class EventReschedulingProposal(BaseModel):
+    new_start_time: datetime
+    new_end_time: datetime
+    explanation: str
+
+
 class ReschedulingProposal(BaseModel):
-    events: list[PendingRescheduledEvent] = Field(description="List of events to be rescheduled")
+    events: dict[CalendarEventId, EventReschedulingProposal] = Field(
+        description="A mapping of event IDs to rescheduling proposals.",
+    )
 
 
 llm = ChatOpenAI(model="gpt-4o-mini")
@@ -103,6 +112,17 @@ async def generate_rescheduling_proposals(
     response = await structured_llm.ainvoke(prompt_str)
 
     if isinstance(response, ReschedulingProposal):
-        return response.events
+        rescheduled_events = []
+        for event_id, event_rescheduling_proposal in response.events.items():
+            event = next(filter(lambda event: event.id == event_id, users_events))  # TODO this is messy
+            rescheduled_events.append(
+                PendingRescheduledEvent(
+                    original_event=event,
+                    new_start_time=event_rescheduling_proposal.new_start_time,
+                    new_end_time=event_rescheduling_proposal.new_end_time,
+                    explanation=event_rescheduling_proposal.explanation,
+                ),
+            )
+        return rescheduled_events
     msg = f"Response is not a ReschedulingProposal object: {response}"
     raise TypeError(msg)

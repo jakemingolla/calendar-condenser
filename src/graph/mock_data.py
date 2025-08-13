@@ -4,21 +4,17 @@ from zoneinfo import ZoneInfo
 
 from src.domains.google_calendar.types.google_calendar import GoogleCalendar
 from src.domains.google_calendar.types.google_calendar_event import GoogleCalendarEvent
+from src.domains.mock_user.mock_user_provider import (
+    adams_user,
+    adams_user_id,
+    me,
+    my_user_id,
+    pauls_user_id,
+    sallys_user,
+    sallys_user_id,
+)
 from src.types.calendar import CalendarId
 from src.types.calendar_event import CalendarEventId, CalendarEventInvitee
-from src.types.user import User, UserId
-
-my_user_id = UserId(uuid4())
-me = User(id=my_user_id, given_name="Randall Kleiser", timezone="America/New_York")
-
-adams_user_id = UserId(uuid4())
-adams_user = User(id=adams_user_id, given_name="Adam Smork", timezone="America/New_York")
-
-sallys_user_id = UserId(uuid4())
-sallys_user = User(id=sallys_user_id, given_name="Sally Li", timezone="America/Los_Angeles")
-
-pauls_user_id = UserId(uuid4())
-pauls_user = User(id=pauls_user_id, given_name="Paul Smith", timezone="America/New_York")
 
 my_calendar = GoogleCalendar(
     id=CalendarId(uuid4()),
