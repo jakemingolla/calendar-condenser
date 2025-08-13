@@ -1,6 +1,7 @@
 import asyncio
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Any, Self
 from zoneinfo import ZoneInfo
 
 from langgraph.graph import END, StateGraph
@@ -9,12 +10,8 @@ from pydantic import BaseModel, Field
 from src.agents.messaging import submit_rescheduling_proposal
 from src.agents.rescheduling import generate_rescheduling_proposals
 from src.agents.summary import summarize_rescheduling_proposals
+from src.domains.mock_calendar.mock_calendar import adams_calendar, my_calendar, sallys_calendar
 from src.domains.mock_user.mock_user_provider import MockUserProvider, adams_user, adams_user_id, me, sallys_user, sallys_user_id
-from src.graph.mock_data import (
-    adams_calendar,
-    my_calendar,
-    sallys_calendar,
-)
 from src.types.calendar import Calendar
 from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.user import User, UserId
@@ -24,6 +21,20 @@ user_provider = MockUserProvider()
 
 class State(BaseModel):
     date: datetime
+
+    @classmethod
+    def from_previous_state(cls, previous_state: BaseModel, **kwargs: Any) -> Self:  # noqa: ANN401
+        """Return a new instance of the new state class using the previous state and the new kwargs.
+
+        Params:
+            previous_state: The previous state.
+            kwargs: The new kwargs to update the state with.
+
+        Returns:
+            A new instance of the new state class using the previous state and the new kwargs.
+
+        """
+        return cls.model_validate(dict(previous_state, **kwargs))
 
 
 class InitialState(State):
@@ -49,14 +60,12 @@ class StateWithCompletedReschedulingProposals(StateWithPendingReschedulingPropos
 
 
 def load_calendar(state: InitialState) -> StateWithCalendar:
-    return StateWithCalendar(user=state.user, calendar=my_calendar, date=state.date)
+    return StateWithCalendar.from_previous_state(state, calendar=my_calendar)
 
 
 def load_invitees(state: StateWithCalendar) -> StateWithInvitees:
-    return StateWithInvitees(
-        user=state.user,
-        calendar=state.calendar,
-        date=state.date,
+    return StateWithInvitees.from_previous_state(
+        state,
         invitees=[adams_user, sallys_user],
         invitee_calendars={adams_user_id: adams_calendar, sallys_user_id: sallys_calendar},
     )
@@ -98,12 +107,8 @@ async def get_rescheduling_proposals(state: StateWithInvitees) -> StateWithPendi
     #     ),
     # ]
 
-    return StateWithPendingReschedulingProposals(
-        user=state.user,
-        date=state.date,
-        calendar=state.calendar,
-        invitees=state.invitees,
-        invitee_calendars=state.invitee_calendars,
+    return StateWithPendingReschedulingProposals.from_previous_state(
+        state,
         pending_rescheduling_proposals=pending_rescheduling_proposals,
     )
 
@@ -130,13 +135,8 @@ async def submit_rescheduling_proposals(state: StateWithPendingReschedulingPropo
             completed_rescheduling_proposals.append(result)
             print(f"{user.given_name} accepted: ", isinstance(result, AcceptedRescheduledEvent))
 
-    return StateWithCompletedReschedulingProposals(
-        user=state.user,
-        date=state.date,
-        calendar=state.calendar,
-        invitees=state.invitees,
-        invitee_calendars=state.invitee_calendars,
-        pending_rescheduling_proposals=pending_rescheduling_proposals,
+    return StateWithCompletedReschedulingProposals.from_previous_state(
+        state,
         completed_rescheduling_proposals=completed_rescheduling_proposals,
     )
 

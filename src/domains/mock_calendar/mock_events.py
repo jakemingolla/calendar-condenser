@@ -2,30 +2,10 @@ from datetime import datetime
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from src.domains.google_calendar.types.google_calendar import GoogleCalendar
-from src.domains.google_calendar.types.google_calendar_event import GoogleCalendarEvent
-from src.domains.mock_user.mock_user_provider import (
-    adams_user,
-    adams_user_id,
-    me,
-    my_user_id,
-    pauls_user_id,
-    sallys_user,
-    sallys_user_id,
-)
-from src.types.calendar import CalendarId
-from src.types.calendar_event import CalendarEventId, CalendarEventInvitee
+from src.domains.mock_user.mock_user_provider import adams_user, adams_user_id, me, my_user_id, pauls_user_id, sallys_user_id
+from src.types.calendar_event import CalendarEvent, CalendarEventId, CalendarEventInvitee
 
-my_calendar = GoogleCalendar(
-    id=CalendarId(uuid4()),
-    name="My Calendar",
-    owner=my_user_id,
-    events=[],
-    created_at=datetime.now(tz=ZoneInfo(me.timezone)),
-    updated_at=datetime.now(tz=ZoneInfo(me.timezone)),
-)
-
-my_first_event = GoogleCalendarEvent(
+my_first_event = CalendarEvent(
     id=CalendarEventId(uuid4()),
     title="Chimera Brainstorming",
     description="We will be brainstorming ideas for a new product.",
@@ -40,7 +20,7 @@ my_first_event = GoogleCalendarEvent(
     updated_at=datetime.now(tz=ZoneInfo(me.timezone)),
 )
 
-my_second_event = GoogleCalendarEvent(
+my_second_event = CalendarEvent(
     id=CalendarEventId(uuid4()),
     title="Team Chimera Grooming",
     description="We will be grooming upcoming work for the next sprint.",
@@ -55,20 +35,8 @@ my_second_event = GoogleCalendarEvent(
     updated_at=datetime.now(tz=ZoneInfo(me.timezone)),
 )
 
-my_calendar.add_event(my_first_event)
-my_calendar.add_event(my_second_event)
 
-
-adams_calendar = GoogleCalendar(
-    id=CalendarId(uuid4()),
-    name="Adam's Calendar",
-    owner=adams_user_id,
-    events=[],
-    created_at=datetime.now(tz=ZoneInfo(adams_user.timezone)),
-    updated_at=datetime.now(tz=ZoneInfo(adams_user.timezone)),
-)
-
-adams_event = GoogleCalendarEvent(
+adams_event = CalendarEvent(
     id=CalendarEventId(uuid4()),
     title="Private Meeting",
     description="Adam will be meeting with his manager to discuss his performance.",
@@ -81,19 +49,3 @@ adams_event = GoogleCalendarEvent(
     created_at=datetime.now(tz=ZoneInfo(adams_user.timezone)),
     updated_at=datetime.now(tz=ZoneInfo(adams_user.timezone)),
 )
-
-adams_calendar.add_event(adams_event)
-adams_calendar.add_event(my_first_event)
-adams_calendar.add_event(my_second_event)
-
-sallys_calendar = GoogleCalendar(
-    id=CalendarId(uuid4()),
-    name="Sally's Calendar",
-    owner=sallys_user_id,
-    events=[],
-    created_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
-    updated_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
-)
-
-sallys_calendar.add_event(my_first_event)
-sallys_calendar.add_event(my_second_event)
