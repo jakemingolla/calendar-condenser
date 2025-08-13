@@ -11,14 +11,15 @@ from src.types.user import User
 
 
 class EventReschedulingProposal(BaseModel):
+    event_id: CalendarEventId
     new_start_time: datetime
     new_end_time: datetime
     explanation: str
 
 
 class ReschedulingProposal(BaseModel):
-    events: dict[CalendarEventId, EventReschedulingProposal] = Field(
-        description="A mapping of event IDs to rescheduling proposals.",
+    events: list[EventReschedulingProposal] = Field(
+        description="A list of rescheduling proposals for events.",
     )
 
 
@@ -28,15 +29,15 @@ structured_llm = llm.with_structured_output(ReschedulingProposal, method="json_s
 
 def serialize_event(event: CalendarEvent) -> str:
     s = f"""
-Event ID: {str(event.id)[:8]}
+Event ID: {event.id!s}
 Start time: {event.start_time.strftime("%Y-%m-%d %H:%M")}
 End time: {event.end_time.strftime("%Y-%m-%d %H:%M")}
 Title: {event.title}
 Description: {event.description}
-Owner's User ID: {str(event.owner)[:8]}
+Owner's User ID: {event.owner!s}
 """
     if len(event.invitees) > 0:
-        s += f"Invitee IDs: {', '.join(str(invitee.id)[:8] for invitee in event.invitees)}\n"
+        s += f"Invitee IDs: {', '.join(str(invitee.id) for invitee in event.invitees)}\n"
     else:
         s += "Invitee IDs: None\n"
     return s
@@ -47,7 +48,7 @@ def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: C
     invitees_events_not_owned_by_subject = list(
         filter(lambda event: event.owner != subject.id, invitees_events),
     )
-    s = f"{invitee.given_name} (User ID: {str(invitee.id)[:8]})"
+    s = f"{invitee.given_name} (User ID: {invitee.id!s})"
     if len(invitees_events_not_owned_by_subject) == 0:
         return f"{s} has no other events scheduled on {date.strftime('%Y-%m-%d')}.\n"
     return f"{s} has these additional events scheduled on {date.strftime('%Y-%m-%d')}:\n" + "\n".join(
@@ -68,7 +69,7 @@ async def generate_rescheduling_proposals(
             "CONTEXT:\n",
             "- You are an assistant that can help with calendar events.\n",
             f"- The current date is {date.strftime('%Y-%m-%d')}.\n"
-            f"- You are speaking with {user.given_name}. Their user ID is {str(user.id)[:8]}.\n"
+            f"- You are speaking with {user.given_name}. Their user ID is {user.id!s}.\n"
             f"- The user's timezone is {user.timezone}.\n",
             "- All times mentioned are in the user's local timezone on the current date.\n",
             "- The user's work hours are from 9am to 5pm in their local timezone.\n",
@@ -113,8 +114,10 @@ async def generate_rescheduling_proposals(
 
     if isinstance(response, ReschedulingProposal):
         rescheduled_events = []
-        for event_id, event_rescheduling_proposal in response.events.items():
-            event = next(filter(lambda event: event.id == event_id, users_events))  # TODO this is messy
+        for event_rescheduling_proposal in response.events:
+            event = next(
+                filter(lambda event: str(event_rescheduling_proposal.event_id) in str(event.id), users_events),
+            )  # TODO this is messy
             rescheduled_events.append(
                 PendingRescheduledEvent(
                     original_event=event,
