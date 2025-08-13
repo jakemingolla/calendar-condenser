@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, Field
 
 from src.agents.rescheduling import generate_rescheduling_proposal
@@ -17,100 +17,71 @@ from src.graph.mock_data import (
     sallys_user,
     sallys_user_id,
 )
-from src.types.calendar_event import CalendarEvent
+from src.types.calendar import Calendar
 from src.types.user import User, UserId
 
 
-class State(BaseModel):
+class InitialState(BaseModel):
     user: User
-    events_for_today_by_user_id: dict[UserId, Sequence[CalendarEvent]] = Field(default_factory=dict)
 
 
-def get_events_for_today(state: State) -> State:
-    state.events_for_today_by_user_id[state.user.id] = my_calendar.get_events_on(
-        datetime.now(tz=ZoneInfo(me.timezone)),
+class StateWithCalendar(InitialState):
+    calendar: Calendar
+
+
+class StateWithInvitees(StateWithCalendar):
+    invitees: Sequence[User]
+    invitee_calendars: dict[UserId, Calendar] = Field(default_factory=dict)
+
+
+def load_calendar(state: InitialState) -> StateWithCalendar:
+    return StateWithCalendar(user=state.user, calendar=my_calendar)
+
+
+def load_invitees(state: StateWithCalendar) -> StateWithInvitees:
+    return StateWithInvitees(
+        user=state.user,
+        calendar=state.calendar,
+        invitees=[adams_user, sallys_user],
+        invitee_calendars={adams_user_id: adams_calendar, sallys_user_id: sallys_calendar},
     )
+
+
+async def get_rescheduling_proposals(state: StateWithInvitees) -> StateWithInvitees:
+    date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
+    other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]
+    rescheduling_proposal = await generate_rescheduling_proposal(date, me, my_calendar, other_invitees)
+
+    print("Rescheduling proposals:")
+    for event in rescheduling_proposal:
+        print("Event ID:", str(event.event_id)[:8])
+        print("New start time:", event.new_start_time.hour)
+        print("New end time:", event.new_end_time.hour)
+        print("Explanation:", event.explanation)
     return state
 
 
-def get_events_for_invitees(state: State) -> State:
-    # Process all events for today and get events for their invitees
-    for event in state.events_for_today_by_user_id[state.user.id]:
-        for invitee in event.invitees:
-            if invitee.id not in state.events_for_today_by_user_id:
-                if invitee.id == adams_user_id:
-                    state.events_for_today_by_user_id[invitee.id] = adams_calendar.get_events_on(
-                        datetime.now(tz=ZoneInfo(adams_user.timezone)),
-                    )
-                elif invitee.id == sallys_user_id:
-                    state.events_for_today_by_user_id[invitee.id] = sallys_calendar.get_events_on(
-                        datetime.now(tz=ZoneInfo(sallys_user.timezone)),
-                    )
-    return state
+graph = StateGraph(InitialState)
 
+# Set the entry point state type
+graph.set_entry_point("load_calendar")
 
-async def get_rescheduling_proposals(state: State) -> State:
-    events = state.events_for_today_by_user_id[state.user.id]
-    invitees_and_their_events = [
-        (other_user_id, other_events)
-        for other_user_id, other_events in state.events_for_today_by_user_id.items()
-        if other_user_id != state.user.id
-    ]
-    rescheduling_proposal = await generate_rescheduling_proposal(state.user, events, invitees_and_their_events)
-    print("Rescheduling proposal")
-    print("Event ID:", str(rescheduling_proposal.event_id)[:8])
-    print("New start time:", rescheduling_proposal.new_start_time.hour)
-    print("New end time:", rescheduling_proposal.new_end_time.hour)
-    print("Explanation:", rescheduling_proposal.explanation)
-    return state
-
-
-def print_state(state: State) -> State:
-    for user_id, events in state.events_for_today_by_user_id.items():
-        print()
-        print(f"User {str(user_id)[:8]}:")
-        for event in events:
-            print(f"  {str(event.id)[:8]} from {event.start_time.hour} to {event.end_time.hour}")
-    return state
-
-
-graph = StateGraph(State)
-
-graph.add_node("get_events_for_today", get_events_for_today)
-graph.add_node("get_events_for_invitees", get_events_for_invitees)
+graph.add_node("load_calendar", load_calendar)
+graph.add_node("load_invitees", load_invitees)
 graph.add_node("get_rescheduling_proposals", get_rescheduling_proposals)
-graph.add_node("print_state", print_state)
 
-graph.add_edge(START, "get_events_for_today")
-graph.add_edge("get_events_for_today", "get_events_for_invitees")
-graph.add_edge("get_events_for_invitees", "get_rescheduling_proposals")
-graph.add_edge("get_rescheduling_proposals", "print_state")
-graph.add_edge("print_state", END)
+graph.add_edge("load_calendar", "load_invitees")
+graph.add_edge("load_invitees", "get_rescheduling_proposals")
+graph.add_edge("get_rescheduling_proposals", END)
 
 
 compiled_graph = graph.compile()
 
 
 async def main() -> None:
-    state = State(user=me)
-    await compiled_graph.ainvoke(state)
+    initial_state = InitialState(user=me)
+    await compiled_graph.ainvoke(initial_state)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# state:
-# - events_for_today_by_user_id: dict[UserId, list[CalendarEvent]]
-#
-#
-# 1. Load user's calendar
-# 2. Get events for today
-# 3. For each event:
-#       - Load the calendar for each invitee
-# 4. Generate proposed changes to start/end times for each event
-# 5. Group each proposed change by user_id
-# 6. For each user_id with proposed changes:
-# 7.    - Send message to user_id with proposed changes
-# 8. For each user_id with proposed changes:
-# 9.    - Periodically check for confirmation
-# -- TODO: Handle failures --
