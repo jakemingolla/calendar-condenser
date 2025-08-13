@@ -5,7 +5,7 @@ from typing import Any, Self
 from zoneinfo import ZoneInfo
 
 from langgraph.graph import END, StateGraph
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.agents.messaging import submit_rescheduling_proposal
 from src.agents.rescheduling import generate_rescheduling_proposals
@@ -22,8 +22,12 @@ user_provider = MockUserProvider()
 class State(BaseModel):
     date: datetime
 
+    # Because the `from_previous_state` method has `kwargs` typed as `Any`, we can't check for extra
+    # fields during type checking. This makes sure we don't leave behind any extra fields (done at runtime).
+    model_config = ConfigDict(extra="forbid")
+
     @classmethod
-    def from_previous_state(cls, previous_state: BaseModel, **kwargs: Any) -> Self:  # noqa: ANN401
+    def from_previous_state(cls: type[Self], previous_state: BaseModel, **kwargs: Any) -> Self:  # noqa: ANN401
         """Return a new instance of the new state class using the previous state and the new kwargs.
 
         Params:
@@ -144,6 +148,7 @@ async def submit_rescheduling_proposals(state: StateWithPendingReschedulingPropo
 def summarization(state: StateWithCompletedReschedulingProposals) -> StateWithCompletedReschedulingProposals:
     summary = summarize_rescheduling_proposals(state.completed_rescheduling_proposals)
     print(summary)
+    print(state.model_dump_json())
     return state
 
 
