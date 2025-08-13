@@ -4,97 +4,132 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from langchain_ollama import ChatOllama
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 
 from src.graph.mock_data import adams_calendar, adams_user, me, my_calendar, sallys_calendar, sallys_user
-from src.types.calendar import CalendarEvent
-from src.types.user import User, UserId
+from src.types.calendar import Calendar, CalendarEvent
+from src.types.user import User
 
 
 class RescheduledEvent(BaseModel):
-    event_id: str
-    new_start_time: datetime
-    new_end_time: datetime
+    event_id: str = Field(description="The event ID which will be moved. This MUST correspond to an existing event ID.")
+    new_start_time: datetime = Field(description="The new start time for the event.")
+    new_end_time: datetime = Field(description="The new end time for the event.")
     explanation: str = Field(description="A detailed explanation of the rescheduling proposal.")
 
 
 llm = ChatOllama(model="llama3.1")
-structured_llm = llm.with_structured_output(RescheduledEvent, method="json_schema")
+structured_llm = llm.with_structured_output(
+    {
+        "type": "array",
+        "items": TypeAdapter(RescheduledEvent).json_schema(),
+    },
+    method="json_schema",
+)
 
 
 def serialize_event(event: CalendarEvent) -> str:
-    return f"""
-{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]}
-{event.title}
-{event.description}
+    s = f"""
+Event ID: {str(event.id)[:8]}
+Start time: {event.start_time.hour}:00
+End time: {event.end_time.hour}:00
+Title: {event.title}
+Description: {event.description}
+Owner's User ID: {str(event.owner)[:8]}
 """
+    if len(event.invitees) > 0:
+        s += f"Invitee IDs: {', '.join(str(invitee.id)[:8] for invitee in event.invitees)}\n"
+    else:
+        s += "Invitee IDs: None\n"
+    return s
 
 
-def serialize_invitee_and_their_events(invitee: UserId, events: Sequence[CalendarEvent]) -> str:
-    return f"""
-{str(invitee)[:8]}'s events:
-{"\n".join(serialize_event(event) for event in events)}
-"""
+def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: Calendar, subject: User) -> str:
+    invitees_events = calendar.get_events_on(date)
+    invitees_events_not_owned_by_subject = list(
+        filter(lambda event: event.owner != subject.id, invitees_events),
+    )
+    s = f"{invitee.given_name} (User ID: {str(invitee.id)[:8]})"
+    if len(invitees_events_not_owned_by_subject) == 0:
+        return f"{s} has no other events scheduled on {date.strftime('%Y-%m-%d')}.\n"
+    return f"{s} has these additional events scheduled on {date.strftime('%Y-%m-%d')}:\n" + "\n".join(
+        serialize_event(event) for event in invitees_events_not_owned_by_subject
+    )
 
 
 async def generate_rescheduling_proposal(
+    date: datetime,
     user: User,
-    events: Sequence[CalendarEvent],
-    invitees_and_their_events: Sequence[tuple[UserId, Sequence[CalendarEvent]]],
-) -> RescheduledEvent:
+    users_calendar: Calendar,
+    other_invitees: Sequence[tuple[User, Calendar]],
+) -> list[RescheduledEvent]:
     """Generate a rescheduling proposal for a calendar event."""
+    users_events = users_calendar.get_events_on(date)
     prompt_str = "".join(
         (
             "CONTEXT:\n",
-            "You are an assistant that can help with calendar events.\n",
-            f"The current date is {datetime.now(tz=ZoneInfo(user.timezone)).strftime('%Y-%m-%d')}.\n"
-            f"You are speaking with {user.given_name}.\n"
-            f"The user's timezone is {user.timezone}.\n",
-            "The user's work hours are from 9am to 5pm in their local timezone.\n",
-            "You will be given a list of calendar events for the user and a list of all invitees and their events.\n",
-            "TASK:\n"
-            "Reschedule one or more events to make the user's schedule as uninterrupted as possible.\n"
-            "RULES:\n"
-            "- A rescheduled event MUST NOT overlap with any existing event.\n",
-            "- A time for a rescheduled event MUST NOT conflict with any other event for any invitee.\n"
+            "- You are an assistant that can help with calendar events.\n",
+            f"- The current date is {date.strftime('%Y-%m-%d')}.\n"
+            f"- You are speaking with {user.given_name}. Their user ID is {str(user.id)[:8]}.\n"
+            f"- The user's timezone is {user.timezone}.\n",
+            "- The user's work hours are from 9am to 5pm in their local timezone.\n",
+            "- You will be given a list of calendar events for the user and a list of all invitees and their events.\n",
+            "\n",
+            "TASK:\n",
+            f"- Reschedule one or more events to make {user.given_name}'s schedule as uninterrupted as possible.\n",
+            "- To reschedule an event, you MUST choose a new start and end time for the event.\n",
+            "\n",
+            "RULES: (All of these rules MUST be followed.)\n",
+            f"- You MUST reschedule at least one event on {user.given_name}'s calendar.\n",
+            "- A rescheduled event MUST NOT conflict with any unchanged event on the user's calendar.\n",
+            "- A rescheduled event MUST NOT conflict with any event on any other user's calendar.\n",
+            "- An event owned by another person MUST NOT be rescheduled.\n",
+            "- A rescheduled event MUST have its start and end times within the user's work hours.\n",
             "- The rescheduled event MUST be scheduled for the same day as the original event.\n"
             "- DO NOT reschedule an event if it does not need to be rescheduled.\n"
+            "\n",
             "PRIORITIES (in order of importance):\n"
-            "- Minimize the number of events that need to be rescheduled.\n"
             "- Minimize the amount of unscheduled time between events.\n"
+            "- Minimize the number of events that need to be rescheduled.\n"
             "- Events later in the day should be rescheduled to be earlier in the day.\n"
-            "EVENTS:\n",
-            f"{'\n'.join(serialize_event(event) for event in events)}\n",
-            "INVITEES AND THEIR EVENTS:\n",
-            f"{'\n'.join(serialize_invitee_and_their_events(invitee, events) for invitee, events in invitees_and_their_events)}\n",
+            "\n",
+            f"{user.given_name}'s events to potentially reschedule:\n",
+            f"{''.join(serialize_event(event) for event in users_events)}",
+            "\n",
+            "\n".join(
+                serialize_invitee_other_events_on(date, invitee, invitees_calendar, user)
+                for invitee, invitees_calendar in other_invitees
+            ),
+            "\n",
+            "You MUST give your response now. Do not include any other text in your response.",
         ),
     )
+    print(prompt_str)
     response = await structured_llm.ainvoke(prompt_str)
-    return RescheduledEvent.model_validate(response)
+    return [RescheduledEvent.model_validate(event) for event in response]
 
 
 async def main() -> None:
-    events = my_calendar.events
-    invitees_and_their_events = [
-        (adams_user.id, adams_calendar.events),
-        (sallys_user.id, sallys_calendar.events),
-    ]
-    rescheduling_proposal = await generate_rescheduling_proposal(me, events, invitees_and_their_events)
+    date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
+    other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]
+    rescheduling_proposals = await generate_rescheduling_proposal(date, me, my_calendar, other_invitees)
 
+    print("--------------------------------")
     print("My calendar events:")
-    for event in events:
-        print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]}")
-    for invitee, invitee_events in invitees_and_their_events:
+    for event in my_calendar.get_events_on(date):
+        print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]} | {event.title}")
+    for invitee, calendar in other_invitees:
         print()
-        print(f"{str(invitee)[:8]}'s calendar events:")
-        for event in invitee_events:
-            print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]}")
+        print(f"{invitee.given_name}'s calendar events:")
+        for event in calendar.events:
+            print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]} | {event.title}")
     print()
-    print("Rescheduling proposal")
-    print("Event ID:", str(rescheduling_proposal.event_id)[:8])
-    print("New start time:", rescheduling_proposal.new_start_time.hour)
-    print("New end time:", rescheduling_proposal.new_end_time.hour)
-    print("Explanation:", rescheduling_proposal.explanation)
+    print("Rescheduling proposals:")
+    for proposal in rescheduling_proposals:
+        print("Event ID:", str(proposal.event_id)[:8])
+        print("New start time:", proposal.new_start_time.hour)
+        print("New end time:", proposal.new_end_time.hour)
+        print("Explanation:", proposal.explanation)
 
 
 if __name__ == "__main__":

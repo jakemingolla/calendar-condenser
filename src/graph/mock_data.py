@@ -17,6 +17,9 @@ adams_user = User(id=adams_user_id, given_name="Adam Smork", timezone="America/N
 sallys_user_id = UserId(uuid4())
 sallys_user = User(id=sallys_user_id, given_name="Sally Li", timezone="America/Los_Angeles")
 
+pauls_user_id = UserId(uuid4())
+pauls_user = User(id=pauls_user_id, given_name="Paul Smith", timezone="America/New_York")
+
 my_calendar = GoogleCalendar(
     id=CalendarId(uuid4()),
     name="My Calendar",
@@ -28,8 +31,8 @@ my_calendar = GoogleCalendar(
 
 my_first_event = GoogleCalendarEvent(
     id=CalendarEventId(uuid4()),
-    title="My Event",
-    description="My Event Description",
+    title="Chimera Brainstorming",
+    description="We will be brainstorming ideas for a new product.",
     owner=my_user_id,
     invitees=[
         CalendarEventInvitee(id=adams_user_id, confirmed=True),
@@ -43,8 +46,8 @@ my_first_event = GoogleCalendarEvent(
 
 my_second_event = GoogleCalendarEvent(
     id=CalendarEventId(uuid4()),
-    title="My Second Event",
-    description="My Second Event Description",
+    title="Team Chimera Grooming",
+    description="We will be grooming upcoming work for the next sprint.",
     owner=my_user_id,
     invitees=[
         CalendarEventInvitee(id=adams_user_id, confirmed=True),
@@ -71,10 +74,12 @@ adams_calendar = GoogleCalendar(
 
 adams_event = GoogleCalendarEvent(
     id=CalendarEventId(uuid4()),
-    title="Adam's Event",
-    description="Adam's Event Description",
+    title="Private Meeting",
+    description="Adam will be meeting with his manager to discuss his performance.",
     owner=adams_user_id,
-    invitees=[],
+    invitees=[
+        CalendarEventInvitee(id=pauls_user_id, confirmed=True),
+    ],
     start_time=datetime(2025, 8, 11, 10, 0, 0, tzinfo=ZoneInfo(adams_user.timezone)),
     end_time=datetime(2025, 8, 11, 12, 0, 0, tzinfo=ZoneInfo(adams_user.timezone)),
     created_at=datetime.now(tz=ZoneInfo(adams_user.timezone)),
@@ -82,6 +87,8 @@ adams_event = GoogleCalendarEvent(
 )
 
 adams_calendar.add_event(adams_event)
+adams_calendar.add_event(my_first_event)
+adams_calendar.add_event(my_second_event)
 
 sallys_calendar = GoogleCalendar(
     id=CalendarId(uuid4()),
@@ -91,3 +98,6 @@ sallys_calendar = GoogleCalendar(
     created_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
     updated_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
 )
+
+sallys_calendar.add_event(my_first_event)
+sallys_calendar.add_event(my_second_event)
