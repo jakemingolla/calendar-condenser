@@ -5,7 +5,7 @@ from typing import Any, Self
 from zoneinfo import ZoneInfo
 
 from langgraph.graph import END, StateGraph
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from src.agents.messaging import submit_rescheduling_proposal
 from src.agents.rescheduling import generate_rescheduling_proposals
@@ -39,6 +39,15 @@ class State(BaseModel):
 
         """
         return cls.model_validate(dict(previous_state, **kwargs))
+
+    @computed_field
+    @property
+    def type(self: Self) -> str:
+        """Return the name of the type of the current state.
+
+        Useful for tracking transitions on edges.
+        """
+        return type(self).__name__
 
 
 class InitialState(State):
