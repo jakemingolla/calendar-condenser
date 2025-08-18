@@ -39,8 +39,7 @@ class CalendarAgent(BaseModel):
                 f"The current date is {datetime.now(tz=ZoneInfo(self.user.timezone)).strftime('%Y-%m-%d')}.\n"
                 f"You are speaking with {self.user.given_name}.\n"
                 f"The user's timezone is {self.user.timezone}.\n",
-                "You have access to the following tools:\n"
-                "get_events_on_date(date: datetime) -> Sequence[GoogleCalendarEvent]:\n",
+                "You have access to the following tools:\nget_events_on_date(date: datetime) -> Sequence[GoogleCalendarEvent]:\n",
             ),
         )
         return ChatPromptTemplate.from_messages(

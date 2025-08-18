@@ -6,9 +6,10 @@ from fastapi.responses import StreamingResponse
 from langchain.load import dumps
 
 from src.agents.calendar import CalendarAgent
-from src.graph.mock_data import me, my_calendar
+from src.domains.mock_calendar.mock_calendar import my_calendar
+from src.domains.mock_user.mock_user_provider import me
 
-calendar_agent = CalendarAgent(user=me, calendar=my_calendar)
+calendar_agent = CalendarAgent(user=me, calendar=my_calendar)  # type: ignore
 app = FastAPI()
 
 

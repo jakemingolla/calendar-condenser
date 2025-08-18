@@ -46,15 +46,18 @@ select = [
 ]
 
 ignore = [
-    "TD", "FIX", # all TODO comment requirements
     "D100", # Missing docstring in public module
     "D101", #Missing docstring in public class
     "D103", # Missing docstring in public function
     "D104", # Missing docstring in public package
     "D203", # Incorrect blank line before class
     "D213", # Multiline-summary second line
+    "ERA001", # Found commented-out code
+    "PGH003", # Use specific rule codes when ignoring type issues
     "S101", # Use of `assert` detected
+    "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
     "T201", # `print` found
+    "TD", "FIX", # all TODO comment requirements
     "TRY003", # Avoid specifying long messages outside the exception class
 ]
 

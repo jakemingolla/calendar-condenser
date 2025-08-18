@@ -1,25 +1,26 @@
-import asyncio
 from collections.abc import Sequence
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from src.graph.mock_data import adams_calendar, adams_user, me, my_calendar, sallys_calendar, sallys_user
-from src.types.calendar import Calendar, CalendarEvent
+from src.types.calendar import Calendar
+from src.types.calendar_event import CalendarEvent, CalendarEventId
+from src.types.rescheduled_event import PendingRescheduledEvent
 from src.types.user import User
 
 
-class RescheduledEvent(BaseModel):
-    event_id: str = Field(description="The event ID which will be moved. This MUST correspond to an existing event ID.")
-    new_start_time: datetime = Field(description="The new start time for the event.")
-    new_end_time: datetime = Field(description="The new end time for the event.")
-    explanation: str = Field(description="A detailed explanation of the rescheduling proposal.")
+class EventReschedulingProposal(BaseModel):
+    event_id: CalendarEventId
+    new_start_time: datetime
+    new_end_time: datetime
+    explanation: str
 
 
 class ReschedulingProposal(BaseModel):
-    events: list[RescheduledEvent] = Field(description="List of events to be rescheduled")
+    events: list[EventReschedulingProposal] = Field(
+        description="A list of rescheduling proposals for events.",
+    )
 
 
 llm = ChatOpenAI(model="gpt-4o-mini")
@@ -28,15 +29,15 @@ structured_llm = llm.with_structured_output(ReschedulingProposal, method="json_s
 
 def serialize_event(event: CalendarEvent) -> str:
     s = f"""
-Event ID: {str(event.id)[:8]}
+Event ID: {event.id!s}
 Start time: {event.start_time.strftime("%Y-%m-%d %H:%M")}
 End time: {event.end_time.strftime("%Y-%m-%d %H:%M")}
 Title: {event.title}
 Description: {event.description}
-Owner's User ID: {str(event.owner)[:8]}
+Owner's User ID: {event.owner!s}
 """
     if len(event.invitees) > 0:
-        s += f"Invitee IDs: {', '.join(str(invitee.id)[:8] for invitee in event.invitees)}\n"
+        s += f"Invitee IDs: {', '.join(str(invitee.id) for invitee in event.invitees)}\n"
     else:
         s += "Invitee IDs: None\n"
     return s
@@ -47,7 +48,7 @@ def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: C
     invitees_events_not_owned_by_subject = list(
         filter(lambda event: event.owner != subject.id, invitees_events),
     )
-    s = f"{invitee.given_name} (User ID: {str(invitee.id)[:8]})"
+    s = f"{invitee.given_name} (User ID: {invitee.id!s})"
     if len(invitees_events_not_owned_by_subject) == 0:
         return f"{s} has no other events scheduled on {date.strftime('%Y-%m-%d')}.\n"
     return f"{s} has these additional events scheduled on {date.strftime('%Y-%m-%d')}:\n" + "\n".join(
@@ -55,12 +56,12 @@ def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: C
     )
 
 
-async def generate_rescheduling_proposal(
+async def generate_rescheduling_proposals(
     date: datetime,
     user: User,
     users_calendar: Calendar,
     other_invitees: Sequence[tuple[User, Calendar]],
-) -> list[RescheduledEvent]:
+) -> list[PendingRescheduledEvent]:
     """Generate a rescheduling proposal for a calendar event."""
     users_events = users_calendar.get_events_on(date)
     prompt_str = "".join(
@@ -68,7 +69,7 @@ async def generate_rescheduling_proposal(
             "CONTEXT:\n",
             "- You are an assistant that can help with calendar events.\n",
             f"- The current date is {date.strftime('%Y-%m-%d')}.\n"
-            f"- You are speaking with {user.given_name}. Their user ID is {str(user.id)[:8]}.\n"
+            f"- You are speaking with {user.given_name}. Their user ID is {user.id!s}.\n"
             f"- The user's timezone is {user.timezone}.\n",
             "- All times mentioned are in the user's local timezone on the current date.\n",
             "- The user's work hours are from 9am to 5pm in their local timezone.\n",
@@ -112,33 +113,19 @@ async def generate_rescheduling_proposal(
     response = await structured_llm.ainvoke(prompt_str)
 
     if isinstance(response, ReschedulingProposal):
-        return response.events
+        rescheduled_events = []
+        for event_rescheduling_proposal in response.events:
+            event = next(
+                filter(lambda event: str(event_rescheduling_proposal.event_id) in str(event.id), users_events),
+            )  # TODO this is messy
+            rescheduled_events.append(
+                PendingRescheduledEvent(
+                    original_event=event,
+                    new_start_time=event_rescheduling_proposal.new_start_time,
+                    new_end_time=event_rescheduling_proposal.new_end_time,
+                    explanation=event_rescheduling_proposal.explanation,
+                ),
+            )
+        return rescheduled_events
     msg = f"Response is not a ReschedulingProposal object: {response}"
     raise TypeError(msg)
-
-
-async def main() -> None:
-    date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
-    other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]
-    rescheduling_proposals = await generate_rescheduling_proposal(date, me, my_calendar, other_invitees)
-
-    print("--------------------------------")
-    print("My calendar events:")
-    for event in my_calendar.get_events_on(date):
-        print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]} | {event.title}")
-    for invitee, calendar in other_invitees:
-        print()
-        print(f"{invitee.given_name}'s calendar events:")
-        for event in calendar.events:
-            print(f"{event.start_time.hour} - {event.end_time.hour}: {str(event.id)[:8]} | {event.title}")
-    print()
-    print("Rescheduling proposals:")
-    for proposal in rescheduling_proposals:
-        print("Event ID:", str(proposal.event_id)[:8])
-        print("New start time:", proposal.new_start_time.hour)
-        print("New end time:", proposal.new_end_time.hour)
-        print("Explanation:", proposal.explanation)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
