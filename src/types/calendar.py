@@ -4,15 +4,14 @@ from datetime import datetime
 from typing import NewType, Self
 from uuid import UUID
 
-from pydantic import BaseModel
-
 from src.types.calendar_event import CalendarEvent
+from src.types.higher_order import BrandedBaseModel
 from src.types.user import UserId
 
 CalendarId = NewType("CalendarId", UUID)
 
 
-class Calendar(BaseModel, ABC):
+class Calendar(BrandedBaseModel, ABC):
     id: CalendarId
     name: str
     owner: UserId

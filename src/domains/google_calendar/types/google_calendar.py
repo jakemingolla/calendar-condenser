@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Literal, Self, override
+from typing import Self, override
 
 from pydantic import Field
 
@@ -12,7 +12,6 @@ from src.types.calendar_event import CalendarEventId
 
 
 class GoogleCalendar(Calendar):
-    type: Literal["google_calendar"] = "google_calendar"
     events: list[GoogleCalendarEvent] = Field(default_factory=list)
 
     def add_event(self: Self, event: GoogleCalendarEvent) -> None:

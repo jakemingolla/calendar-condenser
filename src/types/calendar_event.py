@@ -3,25 +3,26 @@ from datetime import datetime
 from typing import Literal, NewType, Self
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import Field
 
+from src.types.higher_order import BrandedBaseModel
 from src.types.user import UserId
 
 CalendarEventId = NewType("CalendarEventId", UUID)
 
 
-class CalendarEventInvitee(BaseModel):
+class CalendarEventInvitee(BrandedBaseModel):
     id: UserId
     confirmed: bool | None = None
     confirmed_at: datetime | None = None
 
 
-class CalendarEvent(BaseModel, ABC):
+class CalendarEvent(BrandedBaseModel, ABC):
     id: CalendarEventId
     title: str
     description: str | None = None
     owner: UserId
-    invitees: list[CalendarEventInvitee] = []
+    invitees: list[CalendarEventInvitee] = Field(default_factory=list)
     start_time: datetime
     end_time: datetime
     created_at: datetime
