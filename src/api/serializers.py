@@ -31,6 +31,6 @@ class StateSerializer:
         return obj
 
     @staticmethod
-    def to_json(state: Any, indent: int | None = 2) -> str:
+    def to_json(state: Any, indent: int | None = None) -> str:
         """Convert state to formatted JSON string."""
         return json.dumps(StateSerializer.serialize(state), indent=indent, ensure_ascii=False)
