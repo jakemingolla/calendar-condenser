@@ -14,10 +14,12 @@ messaging_platform = MockMessagingPlatform()
 
 
 async def generate_rescheduling_proposal_message(
-    user: User,
     rescheduling_proposal: PendingRescheduledEvent,
 ) -> str:
-    return f"I'm proposing to reschedule the event from {rescheduling_proposal.new_start_time} to {rescheduling_proposal.new_end_time}."
+    return (
+        "I'm proposing to reschedule the event from "
+        f"{rescheduling_proposal.new_start_time} to {rescheduling_proposal.new_end_time}."
+    )
 
 
 class ReschedulingProposalResolution(StrEnum):
@@ -74,7 +76,7 @@ async def submit_rescheduling_proposal(
     user: User,
     rescheduled_event: PendingRescheduledEvent,
 ) -> AcceptedRescheduledEvent | RejectedRescheduledEvent:
-    message = await generate_rescheduling_proposal_message(user, rescheduled_event)
+    message = await generate_rescheduling_proposal_message(rescheduled_event)
     receipt = await messaging_platform.send_message(user, message)
     response: str | None = None
 
