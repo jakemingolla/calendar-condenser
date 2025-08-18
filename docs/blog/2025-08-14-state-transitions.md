@@ -1,6 +1,7 @@
 # State Transitions
 
 Author: [@jakemingolla](https://github.com/jakemingolla)
+
 Published: 2025-08-14
 
 ## Overview
@@ -37,9 +38,9 @@ In addition, having a single monolithic state class makes it difficult to test a
 
 ## An Improvement
 
-Luckily, LangGraphs [documentation on multiple schemas for state](https://langchain-ai.github.io/langgraph/concepts/low_level/#multiple-schemas) is a good starting point for us. Take some time to read through the example they provide and the important takeaways they provide.
+Luckily, LangGraphs [documentation on multiple schemas for state](https://langchain-ai.github.io/langgraph/concepts/low_level/#multiple-schemas) is a good starting point for us. Take some time to read through the example and important takeaways they provide.
 
-For the example above, we could create a hierarchy of state classes inheriting in order of node transitions (like a [hermit crab trading shells](https://www.youtube.com/watch?v=f1dnocPQXDQ)):
+For the example above, we could create a hierarchy of state classes, each inheriting from the previous state class in order of node transitions (like a [hermit crab trading shells](https://www.youtube.com/watch?v=f1dnocPQXDQ)):
 
 ```python
 
