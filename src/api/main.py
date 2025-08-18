@@ -1,15 +1,16 @@
 from collections.abc import AsyncGenerator
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
-from langchain.load import dumps
+from langchain_core.messages import AIMessageChunk
 
-from src.agents.calendar import CalendarAgent
-from src.domains.mock_calendar.mock_calendar import my_calendar
+from src.api.serializers import StateSerializer
 from src.domains.mock_user.mock_user_provider import me
+from src.graph.main import InitialState, compiled_graph
 
-calendar_agent = CalendarAgent(user=me, calendar=my_calendar)  # type: ignore
 app = FastAPI()
 
 
@@ -18,17 +19,23 @@ async def root() -> dict[str, str]:
     return {"message": "Hello World"}
 
 
-async def invoke_agent(input: str) -> AsyncGenerator[str, Any]:
-    async for raw in calendar_agent.executor.astream_events(
-        input={"input": input},
-        include_types=[
-            "chat_model",
-            "tool",
-        ],
+async def invoke_graph() -> AsyncGenerator[str, Any]:
+    date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
+
+    async for mode, chunk in compiled_graph.astream(
+        input=InitialState(date=date, user=me),
+        stream_mode=["values", "messages"],
     ):
-        yield dumps(raw) + "\n"
+        if mode == "values":
+            yield StateSerializer.to_json(chunk) + "\n"
+        elif mode == "messages":
+            for message in chunk:
+                if isinstance(message, AIMessageChunk):
+                    source = message.additional_kwargs.get("source", "")
+                    if "public" in source:
+                        yield message.model_dump_json() + "\n"
 
 
-@app.get("/stream")
-async def stream() -> StreamingResponse:
-    return StreamingResponse(invoke_agent("How many events do I have today?"))
+@app.post("/")
+async def invoke_agent() -> StreamingResponse:
+    return StreamingResponse(invoke_graph())

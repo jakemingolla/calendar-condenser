@@ -1,4 +1,4 @@
-"""LangChain callback to add source information to message chunks."""
+# ruff: noqa: ARG002
 
 from typing import Any
 
@@ -30,7 +30,7 @@ class AddSourceToMessagesCallback(BaseCallbackHandler):
         chunk: dict[str, Any] | BaseMessage | None = None,
         run_id: str | None = None,
         parent_run_id: str | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> None:
         """Add source information to each token chunk.
 
@@ -42,13 +42,8 @@ class AddSourceToMessagesCallback(BaseCallbackHandler):
             **kwargs: Additional keyword arguments
 
         """
-        # Handle different chunk types
-        if chunk is None:
-            return
-
         if isinstance(chunk, ChatGenerationChunk):
             chunk.message.additional_kwargs["source"] = self.source
-            return
 
     @property
     def always_verbose(self) -> bool:
