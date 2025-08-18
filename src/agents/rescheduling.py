@@ -4,6 +4,7 @@ from datetime import datetime
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from src.callbacks.add_source_to_messages import AddSourceToMessagesCallback
 from src.types.calendar import Calendar
 from src.types.calendar_event import CalendarEvent, CalendarEventId
 from src.types.rescheduled_event import PendingRescheduledEvent
@@ -23,7 +24,7 @@ class ReschedulingProposal(BaseModel):
     )
 
 
-llm = ChatOpenAI(model="gpt-4o-mini")
+llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="rescheduling")])
 structured_llm = llm.with_structured_output(ReschedulingProposal, method="json_schema")
 
 

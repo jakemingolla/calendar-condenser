@@ -171,12 +171,12 @@ graph.add_node("submit_rescheduling_proposals", submit_rescheduling_proposals)
 graph.add_node("summarization", summarization)
 
 graph.add_edge("load_calendar", "load_invitees")
-graph.add_edge("load_invitees", END)
-# graph.add_edge("load_invitees", "print_all_events")
-# graph.add_edge("print_all_events", "get_rescheduling_proposals")
-# graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
-# graph.add_edge("submit_rescheduling_proposals", "summarization")
-# graph.add_edge("summarization", END)
+# graph.add_edge("load_invitees", END)
+graph.add_edge("load_invitees", "print_all_events")
+graph.add_edge("print_all_events", "get_rescheduling_proposals")
+graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
+graph.add_edge("submit_rescheduling_proposals", "summarization")
+graph.add_edge("summarization", END)
 
 
 compiled_graph = graph.compile()

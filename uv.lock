@@ -788,6 +788,7 @@ dependencies = [
     { name = "langchain-ollama" },
     { name = "langchain-openai" },
     { name = "langgraph" },
+    { name = "openai" },
     { name = "pydantic" },
 ]
 
@@ -806,6 +807,7 @@ requires-dist = [
     { name = "langchain-ollama", specifier = ">=0.3.6" },
     { name = "langchain-openai", specifier = ">=0.3.30" },
     { name = "langgraph", specifier = ">=0.6.4" },
+    { name = "openai", specifier = ">=1.99.9" },
     { name = "pydantic", specifier = ">=2.11.7" },
 ]
 

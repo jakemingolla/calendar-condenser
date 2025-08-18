@@ -21,11 +21,12 @@ async def root() -> dict[str, str]:
 async def invoke_graph() -> AsyncGenerator[str, Any]:
     date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
 
-    async for _, chunk in compiled_graph.astream(
+    async for mode, chunk in compiled_graph.astream(
         input=InitialState(date=date, user=me),
-        stream_mode=["values"],
+        stream_mode=["values", "messages"],
     ):
-        yield StateSerializer.to_json(chunk) + "\n"
+        if mode == "values":
+            yield StateSerializer.to_json(chunk) + "\n"
 
 
 @app.post("/")
