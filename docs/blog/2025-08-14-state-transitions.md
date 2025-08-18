@@ -77,11 +77,11 @@ from pydantic import BaseModel, computed_field
 
 class InitialState(BaseModel):
     started_at: datetime
+    type: str = ""
 
-    @computed_field # Necessary for Pydantic to include the property in the `model_dump_json` output
-    @property
-    def type(self) -> str:
-        return type(self).__name__
+    def model_post_init(self, __context: Any, /) -> None:  # noqa: ANN401
+        """Set the type field to the actual class name after initialization."""
+        object.__setattr__(self, "type", self.__class__.__name__)
 
 class StateWithUserInformation(InitialState):
     ...
