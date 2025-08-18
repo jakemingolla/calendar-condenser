@@ -1,10 +1,6 @@
 from collections.abc import Sequence
 
-from langchain_openai import ChatOpenAI
-
 from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedRescheduledEvent
-
-llm = ChatOpenAI(model="gpt-4o-mini")
 
 
 def summarize_rescheduling_proposals(

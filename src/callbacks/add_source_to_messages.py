@@ -14,7 +14,7 @@ class AddSourceToMessagesCallback(BaseCallbackHandler):
     which is useful for debugging, logging, or routing purposes.
     """
 
-    def __init__(self, source: str):
+    def __init__(self, source: str) -> None:
         """Initialize the callback with a source identifier.
 
         Args:

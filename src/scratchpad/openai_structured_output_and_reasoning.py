@@ -2,7 +2,7 @@ import asyncio
 from typing import cast
 
 from langchain_core.messages import BaseMessage
-from langchain_ollama import ChatOllama
+from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel
 
@@ -15,14 +15,13 @@ class Joke(BaseModel):
     explanation: str
 
 
-reasoning_llm = ChatOllama(
-    model="gpt-oss:20b",
+reasoning_llm = ChatOpenAI(
+    model="gpt-4o-mini",
     temperature=0,
-    reasoning=True,
     callbacks=[AddSourceToMessagesCallback(source="reasoning")],
 )
-structured_llm = ChatOllama(
-    model="llama3.1",
+structured_llm = ChatOpenAI(
+    model="gpt-4o-mini",
     callbacks=[AddSourceToMessagesCallback(source="structured_output")],
 ).with_structured_output(
     schema=Joke,
@@ -42,7 +41,7 @@ graph = StateGraph(InitialState)
 
 
 def get_reasoning_prompt(topic: str) -> str:
-    return f"Tell me a joke about {topic}."
+    return f"Tell me a joke about {topic}. Describe the process you went through to come up with the joke before you tell it."
 
 
 def get_structured_prompt(response: str) -> str:
@@ -77,8 +76,6 @@ compiled_graph = graph.compile()
 
 
 async def stream() -> None:
-    current_mode = None
-
     async for mode, chunk in compiled_graph.astream(
         input=InitialState(topic="bananas"),
         stream_mode=["values", "messages"],
@@ -88,17 +85,7 @@ async def stream() -> None:
         elif mode == "messages":
             for message in chunk:
                 if isinstance(message, BaseMessage):
-                    reasoning_content = message.additional_kwargs.get("reasoning_content", "")
-                    if reasoning_content:
-                        if current_mode is None:
-                            print("Thinking:")
-                            current_mode = "thinking"
-                        print(reasoning_content, end="")  # type: ignore
-                    else:
-                        if current_mode == "thinking":
-                            print("\nDone thinking")
-                            current_mode = None
-                        print(str(message.content), end="")  # type: ignore
+                    print(message.content, end="")  # type: ignore
 
 
 if __name__ == "__main__":

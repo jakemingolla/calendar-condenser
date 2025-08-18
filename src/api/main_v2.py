@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
+from langchain_core.messages import AIMessageChunk
 
 from src.api.serializers import StateSerializer
 from src.domains.mock_user.mock_user_provider import me
@@ -27,6 +28,12 @@ async def invoke_graph() -> AsyncGenerator[str, Any]:
     ):
         if mode == "values":
             yield StateSerializer.to_json(chunk) + "\n"
+        elif mode == "messages":
+            for message in chunk:
+                if isinstance(message, AIMessageChunk):
+                    source = message.additional_kwargs.get("source", "")
+                    if "public" in source:
+                        yield message.model_dump_json() + "\n"
 
 
 @app.post("/")

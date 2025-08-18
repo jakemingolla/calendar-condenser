@@ -1,9 +1,11 @@
 from asyncio import sleep
 from enum import StrEnum
+from typing import cast
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from src.callbacks.add_source_to_messages import AddSourceToMessagesCallback
 from src.domains.mock_messaging.mock_messaging_platform import MockMessagingPlatform
 from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.user import User
@@ -33,8 +35,15 @@ class ReschedulingProposalResolutionOutput(BaseModel):
     reason: str = Field(description="The reason for the resolution.")
 
 
-resolution_llm = llm.with_structured_output(
+structured_llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    callbacks=[AddSourceToMessagesCallback(source="messaging.structured_output")],
+).with_structured_output(
     ReschedulingProposalResolutionOutput,
+)
+unstructured_llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    callbacks=[AddSourceToMessagesCallback(source="messaging.public")],
 )
 
 
@@ -61,7 +70,9 @@ async def determine_rescheduling_proposal_resolution(
             "- You MUST provide a short sentence for the reason why you made your decision.\n",
         ),
     )
-    output = await resolution_llm.ainvoke(prompt)
+    reasoning_response = await unstructured_llm.ainvoke(prompt)
+    reasoning = cast("str", reasoning_response.content)
+    output = await structured_llm.ainvoke(reasoning)
 
     if isinstance(output, ReschedulingProposalResolutionOutput):
         if output.resolution == ReschedulingProposalResolution.ACCEPTED:

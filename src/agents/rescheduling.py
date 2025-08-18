@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
+from typing import cast
 
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
@@ -24,8 +25,11 @@ class ReschedulingProposal(BaseModel):
     )
 
 
-llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="rescheduling")])
-structured_llm = llm.with_structured_output(ReschedulingProposal, method="json_schema")
+unstructured_llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="rescheduling.public")])
+structured_llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    callbacks=[AddSourceToMessagesCallback(source="rescheduling.structured_output")],
+).with_structured_output(ReschedulingProposal, method="json_schema")
 
 
 def serialize_event(event: CalendarEvent) -> str:
@@ -111,11 +115,14 @@ async def generate_rescheduling_proposals(
             "You MUST give your response now - return a list of rescheduled events.",
         ),
     )
-    response = await structured_llm.ainvoke(prompt_str)
+    reasoning_response = await unstructured_llm.ainvoke(prompt_str)
+    reasoning = cast("str", reasoning_response.content)
+    rescheduling_proposal = await structured_llm.ainvoke(reasoning)
 
-    if isinstance(response, ReschedulingProposal):
+    if isinstance(rescheduling_proposal, ReschedulingProposal):
         rescheduled_events = []
-        for event_rescheduling_proposal in response.events:
+        for event_rescheduling_proposal in rescheduling_proposal.events:
+            # Filter out events that are not owned by the user
             event = next(
                 filter(lambda event: str(event_rescheduling_proposal.event_id) in str(event.id), users_events),
             )  # TODO this is messy
@@ -128,5 +135,6 @@ async def generate_rescheduling_proposals(
                 ),
             )
         return rescheduled_events
-    msg = f"Response is not a ReschedulingProposal object: {response}"
+
+    msg = f"Response is not a ReschedulingProposal object: {rescheduling_proposal}"
     raise TypeError(msg)
