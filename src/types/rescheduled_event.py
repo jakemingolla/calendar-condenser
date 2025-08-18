@@ -1,11 +1,13 @@
+from abc import ABC
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from src.types.calendar_event import CalendarEvent
+from src.types.higher_order import BrandedBaseModel
 
 
-class RescheduledEvent(BaseModel):
+class RescheduledEvent(BrandedBaseModel, ABC):
     original_event: CalendarEvent = Field(description="The event pending rescheduling.")
     new_start_time: datetime = Field(description="The new start time for the event.")
     new_end_time: datetime = Field(description="The new end time for the event.")

@@ -1,12 +1,12 @@
 from typing import NewType
 from uuid import UUID
 
-from pydantic import BaseModel
+from src.types.higher_order import BrandedBaseModel
 
 UserId = NewType("UserId", UUID)
 
 
-class User(BaseModel):
+class User(BrandedBaseModel):
     id: UserId
     given_name: str
     timezone: str

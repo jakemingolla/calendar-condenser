@@ -5,7 +5,7 @@ from typing import Any, Self
 from zoneinfo import ZoneInfo
 
 from langgraph.graph import END, StateGraph
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.agents.messaging import submit_rescheduling_proposal
 from src.agents.rescheduling import generate_rescheduling_proposals
@@ -40,14 +40,11 @@ class State(BaseModel):
         """
         return cls.model_validate(dict(previous_state, **kwargs))
 
-    @computed_field
-    @property
-    def type(self: Self) -> str:
-        """Return the name of the type of the current state.
+    type: str = ""  # NOTE: Overridden in `model_post_init`
 
-        Useful for tracking transitions on edges.
-        """
-        return type(self).__name__
+    def model_post_init(self, __context: Any, /) -> None:  # noqa: ANN401
+        """Set the type field to the actual class name after initialization."""
+        object.__setattr__(self, "type", self.__class__.__name__)
 
 
 class InitialState(State):
@@ -174,6 +171,7 @@ graph.add_node("submit_rescheduling_proposals", submit_rescheduling_proposals)
 graph.add_node("summarization", summarization)
 
 graph.add_edge("load_calendar", "load_invitees")
+# graph.add_edge("load_invitees", END)
 graph.add_edge("load_invitees", "print_all_events")
 graph.add_edge("print_all_events", "get_rescheduling_proposals")
 graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
