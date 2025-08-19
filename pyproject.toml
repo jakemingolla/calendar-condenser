@@ -62,6 +62,11 @@ ignore = [
     "TRY003", # Avoid specifying long messages outside the exception class
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"test/*" = [
+    "DTZ", # Timezone related
+]
+
 [tool.ruff.lint.flake8-builtins]
 allowed-modules = ["types"]
 ignorelist = ["id", "input"]

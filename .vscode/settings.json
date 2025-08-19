@@ -1,5 +1,6 @@
 {
     "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
     "files.exclude": {
         "**/.ruff_cache": true,
         "**/__pycache__": true,

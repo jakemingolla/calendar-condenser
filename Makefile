@@ -15,7 +15,7 @@ install: uv ## Install dependencies
 	uv sync --frozen
 
 test:  ## Run tests
-	uv run pytest test/
+	uv run python -m pytest test/
 
 lint:  ## Run linters
 	uv run ruff check && uv run basedpyright
