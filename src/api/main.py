@@ -1,5 +1,7 @@
+from asyncio import sleep
 from collections.abc import AsyncGenerator
 from datetime import datetime
+from random import random
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -29,6 +31,7 @@ async def invoke_graph() -> AsyncGenerator[str, Any]:
         if mode == "values":
             yield StateSerializer.to_json(chunk) + "\n"
         elif mode == "messages":
+            await sleep(random() / 10)
             for message in chunk:
                 if isinstance(message, AIMessageChunk):
                     source = message.additional_kwargs.get("source", "")

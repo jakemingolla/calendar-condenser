@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 
 from langgraph.graph import END, StateGraph
 
+from src.agents.guide import introduction_to_user
 from src.agents.messaging import submit_rescheduling_proposal
 from src.agents.rescheduling import generate_rescheduling_proposals
 from src.agents.summary import summarize_rescheduling_proposals
@@ -21,11 +22,18 @@ from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedResche
 user_provider = MockUserProvider()
 
 
-def load_calendar(state: InitialState) -> StateWithCalendar:
+async def introduction(state: InitialState) -> InitialState:
+    await introduction_to_user(state.user, state.date)
+    return state
+
+
+async def load_calendar(state: InitialState) -> StateWithCalendar:
+    await asyncio.sleep(2)
     return StateWithCalendar.from_previous_state(state, calendar=my_calendar)
 
 
-def load_invitees(state: StateWithCalendar) -> StateWithInvitees:
+async def load_invitees(state: StateWithCalendar) -> StateWithInvitees:
+    await asyncio.sleep(2)
     return StateWithInvitees.from_previous_state(
         state,
         invitees=[adams_user, sallys_user],
@@ -112,9 +120,9 @@ def summarization(state: StateWithCompletedReschedulingProposals) -> StateWithCo
 
 graph = StateGraph(InitialState)
 
-# Set the entry point state type
-graph.set_entry_point("load_calendar")
+graph.set_entry_point("introduction")
 
+graph.add_node("introduction", introduction)
 graph.add_node("load_calendar", load_calendar)
 graph.add_node("load_invitees", load_invitees)
 graph.add_node("print_all_events", print_all_events)
@@ -122,13 +130,15 @@ graph.add_node("get_rescheduling_proposals", get_rescheduling_proposals)
 graph.add_node("submit_rescheduling_proposals", submit_rescheduling_proposals)
 graph.add_node("summarization", summarization)
 
+graph.add_edge("introduction", "load_calendar")
 graph.add_edge("load_calendar", "load_invitees")
-# graph.add_edge("load_invitees", END)
-graph.add_edge("load_invitees", "print_all_events")
-graph.add_edge("print_all_events", "get_rescheduling_proposals")
-graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
-graph.add_edge("submit_rescheduling_proposals", "summarization")
-graph.add_edge("summarization", END)
+graph.add_edge("load_invitees", END)
+
+# graph.add_edge("load_invitees", "print_all_events")
+# graph.add_edge("print_all_events", "get_rescheduling_proposals")
+# graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
+# graph.add_edge("submit_rescheduling_proposals", "summarization")
+# graph.add_edge("summarization", END)
 
 
 compiled_graph = graph.compile()

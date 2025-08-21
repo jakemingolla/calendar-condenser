@@ -57,6 +57,7 @@ ignore = [
     "PGH003", # Use specific rule codes when ignoring type issues
     "S101", # Use of `assert` detected
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "SIM117", # Use a single `with` statement with multiple contexts instead of nested `with` statements
     "T201", # `print` found
     "TD", "FIX", # all TODO comment requirements
     "TRY003", # Avoid specifying long messages outside the exception class
