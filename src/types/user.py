@@ -10,3 +10,4 @@ class User(BrandedBaseModel):
     id: UserId
     given_name: str
     timezone: str
+    avatar_url: str

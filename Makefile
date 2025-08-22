@@ -10,6 +10,7 @@ help:  ## Show this help message
 	@echo "  run - Run the project"
 	@echo "  lint - Run linting"
 	@echo "  test - Run tests"
+	@echo "  dev - Run the project in development mode"
 
 install: uv ## Install dependencies
 	uv sync --frozen
@@ -20,5 +21,5 @@ test:  ## Run tests
 lint:  ## Run linters
 	uv run ruff check && uv run basedpyright
 
-run:  ## Run the project
-	@uv run python -m src.main
+dev:   ## Run the project in development mode
+	@uv run fastapi dev src/api/main.py

@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from src.domains.mock_calendar.mock_calendar import my_calendar
-from src.graph.state import InitialState, StateWithCalendar
+from src.types.state import InitialState, StateWithCalendar
 
 
 def test_initial_state_type(mock_initial_state: InitialState) -> None:

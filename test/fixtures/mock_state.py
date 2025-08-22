@@ -4,7 +4,7 @@ import pytest
 
 from src.domains.mock_calendar.mock_calendar import my_calendar
 from src.domains.mock_user.mock_user_provider import me
-from src.graph.state import InitialState, StateWithCalendar
+from src.types.state import InitialState, StateWithCalendar
 
 
 @pytest.fixture
