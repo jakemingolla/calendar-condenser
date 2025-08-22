@@ -10,6 +10,7 @@ me = User(
     given_name="Randall Kleiser",
     timezone="America/New_York",
     avatar_url="https://api.dicebear.com/9.x/micah/svg?seed=Destiny&eyes=eyesShadow,eyes&mouth=laughing,smile,smirk",
+    preffered_working_hours=(9, 17),
 )
 
 adams_user_id = UserId(uuid4())
@@ -18,6 +19,7 @@ adams_user = User(
     given_name="Adam Smork",
     timezone="America/New_York",
     avatar_url="https://api.dicebear.com/9.x/micah/svg?seed=Aiden&mouth=laughing,smile,smirk",
+    preffered_working_hours=(9, 17),
 )
 
 sallys_user_id = UserId(uuid4())
@@ -26,6 +28,7 @@ sallys_user = User(
     given_name="Sally Li",
     timezone="America/Los_Angeles",
     avatar_url="https://api.dicebear.com/9.x/micah/svg?seed=Riley&baseColor=ac6651&mouth=smirk",
+    preffered_working_hours=(11, 19),
 )
 
 pauls_user_id = UserId(uuid4())
@@ -34,6 +37,7 @@ pauls_user = User(
     given_name="Paul Smith",
     timezone="America/New_York",
     avatar_url="https://api.dicebear.com/9.x/micah/svg?seed=Aiden&mouth=laughing,smile,smirk",
+    preffered_working_hours=(9, 17),
 )
 
 mock_users = {
