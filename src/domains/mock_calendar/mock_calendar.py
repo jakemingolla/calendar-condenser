@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import Field
 
-from src.domains.mock_calendar.mock_events import adams_event, my_first_event, my_second_event
+from src.domains.mock_calendar.mock_events import adams_event, my_first_event, my_second_event, sallys_event
 from src.domains.mock_user.mock_user_provider import adams_user, adams_user_id, me, my_user_id, sallys_user, sallys_user_id
 from src.types.calendar import Calendar, CalendarId
 from src.types.calendar_event import CalendarEvent
@@ -57,3 +57,4 @@ sallys_calendar = MockCalendar(
 
 sallys_calendar.add_event(my_first_event)
 sallys_calendar.add_event(my_second_event)
+sallys_calendar.add_event(sallys_event)
