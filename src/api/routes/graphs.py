@@ -66,7 +66,7 @@ async def invoke_graph(graph: CompiledStateGraph[Any]) -> AsyncGenerator[str]:
                 if isinstance(message, AIMessageChunk):
                     source = message.additional_kwargs.get("source", "")
                     if "public" in source:
-                        yield message.model_dump_json() + "\n"
+                        yield message.model_dump_json().replace("\n", "\\n") + "\n"
 
 
 @router.post(

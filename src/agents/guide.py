@@ -83,10 +83,31 @@ async def summarize_state_with_calendar(state: StateWithCalendar) -> None:
             "- When you have finished summarizing the calendar events, explain the next step:\n",
             "  - You will now load the calendars of all invitees for the current date.\n",
             "\n",
+            "RULES:\n",
+            "- Do not count the current user towards the total number of invitees.\n",
             formatting_rules,
             "\n",
             "CALENDAR EVENTS:\n",
             "".join(serialize_event(event) for event in calendar_events),
+        ),
+    )
+
+    await unstructured_llm.ainvoke(prompt)
+
+
+async def anticipate_rescheduling_proposals(state: StateWithCalendar) -> None:
+    baseline_context = get_baseline_context(state.user, state.date)
+    formatting_rules = get_formatting_rules()
+    prompt = "".join(
+        (
+            baseline_context,
+            "\n",
+            "CORE OBJECTIVE:\n",
+            "- Explain to the user you will be generating rescheduling proposals for their calendar events.\n",
+            "- Explain that you will try and find the best time to reschedule their events.\n",
+            "- Indicate you are thinking very hard by using language like 'Hmmm...' or 'Let me think about this...'.\n",
+            "\n",
+            formatting_rules,
         ),
     )
 

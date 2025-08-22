@@ -64,8 +64,8 @@ sallys_event = CalendarEvent(
     description="We will be calling a customer to discuss their needs.",
     owner=sallys_user_id,
     invitees=[],
-    start_time=datetime(2025, 8, 11, 16, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
-    end_time=datetime(2025, 8, 11, 17, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
+    start_time=datetime(2025, 8, 11, 11, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
+    end_time=datetime(2025, 8, 11, 12, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
     created_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
     updated_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
 )
