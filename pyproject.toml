@@ -57,6 +57,7 @@ ignore = [
     "FLY002", # Consider f-string instead of string join
     "PGH003", # Use specific rule codes when ignoring type issues
     "S101", # Use of `assert` detected
+    "S106", # Possible hardcoded password assigned to argument: "token"
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
     "SIM117", # Use a single `with` statement with multiple contexts instead of nested `with` statements
     "T201", # `print` found
@@ -67,6 +68,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "test/*" = [
     "DTZ", # Timezone related
+    "ANN201", # Missing return type annotation for public function
 ]
 
 [tool.ruff.lint.flake8-builtins]
