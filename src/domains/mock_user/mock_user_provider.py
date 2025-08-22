@@ -25,7 +25,7 @@ sallys_user = User(
     id=sallys_user_id,
     given_name="Sally Li",
     timezone="America/Los_Angeles",
-    avatar_url="https://api.dicebear.com/9.x/miniavs/svg?seed=Eliza",
+    avatar_url="https://api.dicebear.com/9.x/micah/svg?seed=Riley&baseColor=ac6651&mouth=smirk",
 )
 
 pauls_user_id = UserId(uuid4())

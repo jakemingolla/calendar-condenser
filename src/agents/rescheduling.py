@@ -5,9 +5,10 @@ from typing import cast
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from src.agents.helpers.serialization import serialize_event
 from src.callbacks.add_source_to_messages import AddSourceToMessagesCallback
 from src.types.calendar import Calendar
-from src.types.calendar_event import CalendarEvent, CalendarEventId
+from src.types.calendar_event import CalendarEventId
 from src.types.rescheduled_event import PendingRescheduledEvent
 from src.types.user import User
 
@@ -30,22 +31,6 @@ structured_llm = ChatOpenAI(
     model="gpt-4o-mini",
     callbacks=[AddSourceToMessagesCallback(source="rescheduling.structured_output")],
 ).with_structured_output(ReschedulingProposal, method="json_schema")
-
-
-def serialize_event(event: CalendarEvent) -> str:
-    s = f"""
-Event ID: {event.id!s}
-Start time: {event.start_time.strftime("%Y-%m-%d %H:%M")}
-End time: {event.end_time.strftime("%Y-%m-%d %H:%M")}
-Title: {event.title}
-Description: {event.description}
-Owner's User ID: {event.owner!s}
-"""
-    if len(event.invitees) > 0:
-        s += f"Invitee IDs: {', '.join(str(invitee.id) for invitee in event.invitees)}\n"
-    else:
-        s += "Invitee IDs: None\n"
-    return s
 
 
 def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: Calendar, subject: User) -> str:
