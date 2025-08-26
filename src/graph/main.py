@@ -24,10 +24,14 @@ user_provider = MockUserProvider()
 
 async def introduction(state: InitialState) -> InitialState:
     await introduction_to_user(state.user, state.date)
+    return state
+
+
+async def confirm_start(state: InitialState) -> InitialState:
     value = interrupt(
         "Do you want to start the rescheduling process?",
     )
-    assert value == "Yes"  # TODO Handle other values
+    assert value == "CONFIRMED"  # TODO Handle other values
     return state
 
 
@@ -78,7 +82,7 @@ async def confirm_rescheduling_proposals(state: StateWithPendingReschedulingProp
     value = interrupt(
         "Do these rescheduling proposals look good?",
     )
-    assert value == "Yes"  # TODO Handle other values
+    assert value == "CONFIRMED"  # TODO Handle other values
     return state
 
 
@@ -122,6 +126,7 @@ uncompiled_graph = StateGraph(InitialState)
 uncompiled_graph.set_entry_point("introduction")
 
 uncompiled_graph.add_node("introduction", introduction)
+uncompiled_graph.add_node("confirm_start", confirm_start)
 uncompiled_graph.add_node("summarize_calendar", summarize_calendar)
 uncompiled_graph.add_node("load_calendar", load_calendar)
 uncompiled_graph.add_node("load_invitees", load_invitees)
@@ -131,7 +136,8 @@ uncompiled_graph.add_node("confirm_rescheduling_proposals", confirm_rescheduling
 uncompiled_graph.add_node("submit_rescheduling_proposals", submit_rescheduling_proposals)
 uncompiled_graph.add_node("summarization", summarization)
 
-uncompiled_graph.add_edge("introduction", "load_calendar")
+uncompiled_graph.add_edge("introduction", "confirm_start")
+uncompiled_graph.add_edge("confirm_start", "load_calendar")
 uncompiled_graph.add_edge("load_calendar", "summarize_calendar")
 uncompiled_graph.add_edge("summarize_calendar", "load_invitees")
 uncompiled_graph.add_edge("load_invitees", "before_rescheduling_proposals")

@@ -2,7 +2,7 @@ from asyncio import sleep
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from random import random
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -13,46 +13,11 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from langgraph.types import Interrupt as GraphInterrupt
-from pydantic import BaseModel, Field
 
 from src.api.serializers import StateSerializer
 from src.domains.mock_user.mock_user_provider import me
 from src.graph.main import InitialState, uncompiled_graph
-from src.types.state import (
-    StateWithCalendar,
-    StateWithCompletedReschedulingProposals,
-    StateWithInvitees,
-    StateWithPendingReschedulingProposals,
-)
-
-
-class AdditionalKwargs(TypedDict):
-    source: str
-
-
-class ResponseMetadata(TypedDict):
-    finish_reason: NotRequired[Literal["stop"]]
-
-
-class StreamlinedAIMessageChunk(BaseModel):
-    type: Literal["AIMessageChunk"] = "AIMessageChunk"
-    content: str = Field(description="The content of the message chunk")
-    id: str = Field(description="Chunks with the same id are part of the same message")
-    additional_kwargs: AdditionalKwargs
-    response_metadata: ResponseMetadata
-
-
-class Interrupt(BaseModel):
-    type: Literal["interrupt"] = "interrupt"
-    value: str = Field(description="The content of the interrupt")
-    id: str = Field(description="The id of the interrupt")
-
-
-class Resume(BaseModel):
-    type: Literal["resume"] = "resume"
-    value: str = Field(description="The content of the resume")
-    id: str = Field(description="The corresponding Interrupt id")
-
+from src.types.rest_api import Interrupt, Resume, StreamResponse
 
 checkpointer = InMemorySaver()
 
@@ -60,18 +25,6 @@ router = APIRouter()
 graphs: dict[str, CompiledStateGraph[Any]] = {
     "default": uncompiled_graph.compile(checkpointer=checkpointer),
 }
-
-# Union type for all possible state types that can be returned from the graph
-State = (
-    InitialState
-    | StateWithCalendar
-    | StateWithInvitees
-    | StateWithPendingReschedulingProposals
-    | StateWithCompletedReschedulingProposals
-)
-
-# Union type for all possible stream responses
-StreamResponse = StreamlinedAIMessageChunk | State | Interrupt
 
 
 async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: Resume | None = None) -> AsyncGenerator[str]:
