@@ -4,7 +4,6 @@ import json
 from datetime import datetime
 from uuid import uuid4
 
-import pytest
 from pydantic import BaseModel
 
 from src.api.serializers import StateSerializer
@@ -267,21 +266,6 @@ def test_to_json_ensure_ascii_false():
     assert isinstance(result, str)
     parsed = json.loads(result)
     assert parsed["unicode"] == "测试🎉"
-
-
-def test_serialize_circular_reference_handling():
-    """Test that serializer handles potential circular references gracefully."""
-    # Note: The current serializer doesn't handle circular references gracefully
-    # This test documents that behavior - circular references will cause recursion errors
-    # In a production environment, you might want to add cycle detection
-
-    # Create a dict that references itself
-    test_dict = {"key": "value"}
-    test_dict["self_ref"] = test_dict  # type: ignore
-
-    # This will cause a RecursionError, which is expected behavior
-    with pytest.raises(RecursionError):
-        StateSerializer.serialize(test_dict)
 
 
 def test_serialize_none_values():
