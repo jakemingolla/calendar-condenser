@@ -3,14 +3,14 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from langgraph.graph import END, StateGraph
+from langgraph.types import interrupt
 
-from src.agents.guide import introduction_to_user, summarize_state_with_calendar
+from src.agents.guide import anticipate_rescheduling_proposals, introduction_to_user, summarize_state_with_calendar
 from src.agents.messaging import submit_rescheduling_proposal
-from src.agents.rescheduling import generate_rescheduling_proposals
 from src.agents.summary import summarize_rescheduling_proposals
 from src.domains.mock_calendar.mock_calendar import adams_calendar, my_calendar, sallys_calendar
 from src.domains.mock_user.mock_user_provider import MockUserProvider, adams_user, adams_user_id, me, sallys_user, sallys_user_id
-from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedRescheduledEvent
+from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.state import (
     InitialState,
     StateWithCalendar,
@@ -24,6 +24,14 @@ user_provider = MockUserProvider()
 
 async def introduction(state: InitialState) -> InitialState:
     await introduction_to_user(state.user, state.date)
+    return state
+
+
+async def confirm_start(state: InitialState) -> InitialState:
+    value = interrupt(
+        "Do you want to start the rescheduling process?",
+    )
+    assert value == "CONFIRMED"  # TODO Handle other values
     return state
 
 
@@ -46,46 +54,36 @@ async def load_invitees(state: StateWithCalendar) -> StateWithInvitees:
     )
 
 
-def print_all_events(state: StateWithInvitees) -> StateWithInvitees:
-    seen_events = set()
-    formatted_date = state.date.strftime("%Y-%m-%d")
-    print(f"{state.user.given_name} events:")
-    for event in state.calendar.get_events_on(state.date):
-        seen_events.add(event.id)
-        print(f"- {event.title} ({event.start_time.strftime('%H:%M')} - {event.end_time.strftime('%H:%M')})")
-    print()
-
-    for invitee, calendar in zip(state.invitees, state.invitee_calendars.values(), strict=True):
-        additional_events = calendar.get_events_on(state.date)
-        unique_events = [event for event in additional_events if event.id not in seen_events]
-        if len(unique_events) > 0:
-            print(f"{invitee.given_name} events:")
-            for event in unique_events:
-                print(f"- {event.title} ({event.start_time} - {event.end_time})")
-            print()
-            seen_events.update(event.id for event in unique_events)
-        else:
-            print(f"{invitee.given_name} has no additional events on {formatted_date}.")
-    print()
+async def before_rescheduling_proposals(state: StateWithInvitees) -> StateWithInvitees:
+    await anticipate_rescheduling_proposals(state)
     return state
 
 
 async def get_rescheduling_proposals(state: StateWithInvitees) -> StateWithPendingReschedulingProposals:
-    other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]
-    pending_rescheduling_proposals = await generate_rescheduling_proposals(state.date, me, my_calendar, other_invitees)
-    # pending_rescheduling_proposals = [
-    #     PendingRescheduledEvent(
-    #         original_event=my_calendar.get_events_on(state.date)[0],
-    #         new_start_time=datetime(2025, 8, 11, 12, 0, 0, tzinfo=ZoneInfo(me.timezone)),
-    #         new_end_time=datetime(2025, 8, 11, 13, 0, 0, tzinfo=ZoneInfo(me.timezone)),
-    #         explanation="I need to reschedule this event because I have a conflict.",
-    #     ),
-    # ]
+    # other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]
+    # pending_rescheduling_proposals = await generate_rescheduling_proposals(state.date, me, my_calendar, other_invitees)
+    pending_rescheduling_proposals = [
+        PendingRescheduledEvent(
+            original_event=my_calendar.get_events_on(state.date)[0],
+            new_start_time=datetime(2025, 8, 11, 12, 0, 0, tzinfo=ZoneInfo(me.timezone)),
+            new_end_time=datetime(2025, 8, 11, 13, 0, 0, tzinfo=ZoneInfo(me.timezone)),
+            explanation="I need to reschedule this event because I have a conflict.",
+        ),
+    ]
+    await asyncio.sleep(3)
 
     return StateWithPendingReschedulingProposals.from_previous_state(
         state,
         pending_rescheduling_proposals=pending_rescheduling_proposals,
     )
+
+
+async def confirm_rescheduling_proposals(state: StateWithPendingReschedulingProposals) -> StateWithPendingReschedulingProposals:
+    value = interrupt(
+        "Do these rescheduling proposals look good?",
+    )
+    assert value == "CONFIRMED"  # TODO Handle other values
+    return state
 
 
 async def submit_rescheduling_proposals(state: StateWithPendingReschedulingProposals) -> StateWithCompletedReschedulingProposals:
@@ -123,42 +121,33 @@ def summarization(state: StateWithCompletedReschedulingProposals) -> StateWithCo
     return state
 
 
-graph = StateGraph(InitialState)
+uncompiled_graph = StateGraph(InitialState)
 
-graph.set_entry_point("introduction")
+uncompiled_graph.set_entry_point("introduction")
 
-graph.add_node("introduction", introduction)
-graph.add_node("summarize_calendar", summarize_calendar)
-graph.add_node("load_calendar", load_calendar)
-graph.add_node("load_invitees", load_invitees)
-graph.add_node("print_all_events", print_all_events)
-graph.add_node("get_rescheduling_proposals", get_rescheduling_proposals)
-graph.add_node("submit_rescheduling_proposals", submit_rescheduling_proposals)
-graph.add_node("summarization", summarization)
+uncompiled_graph.add_node("introduction", introduction)
+uncompiled_graph.add_node("confirm_start", confirm_start)
+uncompiled_graph.add_node("summarize_calendar", summarize_calendar)
+uncompiled_graph.add_node("load_calendar", load_calendar)
+uncompiled_graph.add_node("load_invitees", load_invitees)
+uncompiled_graph.add_node("before_rescheduling_proposals", before_rescheduling_proposals)
+uncompiled_graph.add_node("get_rescheduling_proposals", get_rescheduling_proposals)
+uncompiled_graph.add_node("confirm_rescheduling_proposals", confirm_rescheduling_proposals)
+uncompiled_graph.add_node("submit_rescheduling_proposals", submit_rescheduling_proposals)
+uncompiled_graph.add_node("summarization", summarization)
 
-graph.add_edge("introduction", "load_calendar")
-graph.add_edge("load_calendar", "summarize_calendar")
-graph.add_edge("summarize_calendar", "load_invitees")
-graph.add_edge("load_invitees", END)
+uncompiled_graph.add_edge("introduction", "confirm_start")
+uncompiled_graph.add_edge("confirm_start", "load_calendar")
+uncompiled_graph.add_edge("load_calendar", "summarize_calendar")
+uncompiled_graph.add_edge("summarize_calendar", "load_invitees")
+uncompiled_graph.add_edge("load_invitees", "before_rescheduling_proposals")
+uncompiled_graph.add_edge("before_rescheduling_proposals", "get_rescheduling_proposals")
+uncompiled_graph.add_edge("get_rescheduling_proposals", "confirm_rescheduling_proposals")
+uncompiled_graph.add_edge("confirm_rescheduling_proposals", END)
 
-# graph.add_edge("load_invitees", "print_all_events")
-# graph.add_edge("print_all_events", "get_rescheduling_proposals")
-# graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
-# graph.add_edge("submit_rescheduling_proposals", "summarization")
-# graph.add_edge("summarization", END)
-
-
-compiled_graph = graph.compile()
-
-
-async def main() -> None:
-    date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
-    print("User:", me.given_name)
-    print("Date:", date)
-    print()
-    initial_state = InitialState(user=me, date=date)
-    await compiled_graph.ainvoke(initial_state)
+# uncompiled_graph.add_edge("get_rescheduling_proposals", "submit_rescheduling_proposals")
+# uncompiled_graph.add_edge("submit_rescheduling_proposals", "summarization")
+# uncompiled_graph.add_edge("summarization", END)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+compiled_graph = uncompiled_graph.compile()

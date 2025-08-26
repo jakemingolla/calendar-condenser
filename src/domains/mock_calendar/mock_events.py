@@ -15,7 +15,7 @@ from src.types.calendar_event import CalendarEvent, CalendarEventId, CalendarEve
 
 my_first_event = CalendarEvent(
     id=CalendarEventId(uuid4()),
-    title="Chimera Brainstorming",
+    title="Team Brainstorming",
     description="We will be brainstorming ideas for a new product.",
     owner=my_user_id,
     invitees=[
@@ -30,8 +30,8 @@ my_first_event = CalendarEvent(
 
 my_second_event = CalendarEvent(
     id=CalendarEventId(uuid4()),
-    title="Team Chimera Grooming",
-    description="We will be grooming upcoming work for the next sprint.",
+    title="Sprint Review",
+    description="We will be investigating upcoming work for the next sprint.",
     owner=my_user_id,
     invitees=[
         CalendarEventInvitee(id=adams_user_id, confirmed=True),
@@ -60,12 +60,12 @@ adams_event = CalendarEvent(
 
 sallys_event = CalendarEvent(
     id=CalendarEventId(uuid4()),
-    title="Customer Call (Anthem Health)",
+    title="Customer Call",
     description="We will be calling a customer to discuss their needs.",
     owner=sallys_user_id,
     invitees=[],
-    start_time=datetime(2025, 8, 11, 16, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
-    end_time=datetime(2025, 8, 11, 17, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
+    start_time=datetime(2025, 8, 11, 11, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
+    end_time=datetime(2025, 8, 11, 12, 0, 0, tzinfo=ZoneInfo(sallys_user.timezone)),
     created_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
     updated_at=datetime.now(tz=ZoneInfo(sallys_user.timezone)),
 )

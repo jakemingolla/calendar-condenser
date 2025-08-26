@@ -26,7 +26,7 @@ class ReschedulingProposal(BaseModel):
     )
 
 
-unstructured_llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="rescheduling.public")])
+unstructured_llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="rescheduling.private")])
 structured_llm = ChatOpenAI(
     model="gpt-4o-mini",
     callbacks=[AddSourceToMessagesCallback(source="rescheduling.structured_output")],
