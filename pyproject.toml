@@ -58,6 +58,7 @@ ignore = [
     "S101", # Use of `assert` detected
     "S106", # Possible hardcoded password assigned to argument: "token"
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "SIM108", # Use ternary operator
     "SIM117", # Use a single `with` statement with multiple contexts instead of nested `with` statements
     "T201", # `print` found
     "TD", "FIX", # all TODO comment requirements

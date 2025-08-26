@@ -34,6 +34,8 @@ def get_formatting_rules() -> str:
             "- You MUST respond in English.\n",
             "- You MUST NOT use any emojis.\n",
             "- Do NOT include numbered lists in your response.\n",
+            "- Do NOT include semicolons in your response.\n",
+            "- Do NOT mention you are working for the calendar-condenser application.\n",
         ),
     )
 
