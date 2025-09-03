@@ -39,7 +39,7 @@ def invoke_subgraph(person: str) -> dict[str, Any]:
     return {"greeted_people": [result["person"]]}
 
 
-def node_2(state: ParentState) -> list[Send]:  # noqa: ARG001
+def node_2(state: ParentState) -> list[Send]:
     return [
         Send(
             "invoke_subgraph",

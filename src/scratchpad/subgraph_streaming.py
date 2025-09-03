@@ -10,7 +10,7 @@ class SubgraphState(TypedDict):
     bar: str
 
 
-def subgraph_node_1(state: SubgraphState):  # noqa: ANN201, ARG001
+def subgraph_node_1(state: SubgraphState):  # noqa: ANN201
     return {"bar": "bar"}
 
 

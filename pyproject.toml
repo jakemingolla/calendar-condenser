@@ -44,6 +44,9 @@ indent-width = 4
 select = [
     "ALL"
 ]
+# Allow the word 'state' to be used as a dummy variable since all LangGraph
+# nodes _must_ have the first positional argument named 'state' (even if unused).
+dummy-variable-rgx = "^_|state$"
 
 ignore = [
     "D100", # Missing docstring in public module
@@ -54,6 +57,7 @@ ignore = [
     "D213", # Multiline-summary second line
     "ERA001", # Found commented-out code
     "FLY002", # Consider f-string instead of string join
+    "INP001", # File ... is part of an implicit namespace package. Add an `__init__.py`.
     "PGH003", # Use specific rule codes when ignoring type issues
     "S101", # Use of `assert` detected
     "S106", # Possible hardcoded password assigned to argument: "token"
@@ -75,3 +79,4 @@ ignore = [
 [tool.ruff.lint.flake8-builtins]
 allowed-modules = ["types"]
 ignorelist = ["id", "input"]
+

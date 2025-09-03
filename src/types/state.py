@@ -1,12 +1,12 @@
-from collections.abc import Sequence
 from datetime import datetime
 from typing import Annotated, Any, Self, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
-from src.types.calendar import Calendar
+from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProposalsResponse
+from src.graph.nodes.load_calendar.types import LoadCalendarResponse
+from src.graph.nodes.load_invitees.types import LoadInviteesResponse
 from src.types.messaging import IncomingMessage, OutgoingMessage
-from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.user import User, UserId
 
 K = TypeVar("K")
@@ -49,23 +49,17 @@ class InitialState(State):
     date: datetime
 
 
-class StateWithCalendar(InitialState):
-    calendar: Calendar
+class StateWithCalendar(InitialState, LoadCalendarResponse):
+    pass
 
 
-class StateWithInvitees(StateWithCalendar):
-    invitees: Sequence[User]
-    invitee_calendars: dict[UserId, Calendar] = Field(default_factory=dict)
+class StateWithInvitees(StateWithCalendar, LoadInviteesResponse):
+    pass
 
 
-class StateWithPendingReschedulingProposals(StateWithInvitees):
-    # TODO This needs to be able to handle multiple proposals for different events.
-    pending_rescheduling_proposals: list[PendingRescheduledEvent]
+class StateWithPendingReschedulingProposals(StateWithInvitees, GetReschedulingProposalsResponse):
+    pass
 
 
 class StateWithInviteeMessages(StateWithPendingReschedulingProposals):
     conversations_by_invitee: Annotated[dict[UserId, list[IncomingMessage | OutgoingMessage]], merge_dicts]
-
-
-class StateWithCompletedReschedulingProposals(StateWithInviteeMessages):
-    completed_rescheduling_proposals: list[AcceptedRescheduledEvent | RejectedRescheduledEvent]

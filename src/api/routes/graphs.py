@@ -37,13 +37,11 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
 
     async for namespace, mode, chunk in graph.astream(
         input=input,
-        stream_mode=["values", "messages", "updates"],
+        stream_mode=["messages", "updates"],
         config={"configurable": {"thread_id": str(thread_id)}},
         subgraphs=True,
     ):
-        if mode == "values" and isinstance(chunk, dict):
-            yield StateSerializer.to_json(chunk) + "\n"
-        elif mode == "messages":
+        if mode == "messages":
             for message in chunk:
                 if isinstance(message, AIMessageChunk):
                     source = message.additional_kwargs.get("source", "")
@@ -60,9 +58,10 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
                     ).model_dump_json()
                     + "\n"
                 )
-            elif len(namespace) > 0:
-                # TODO
-                yield StateSerializer.to_json(chunk) + "\n"
+            else:
+                # TODO note on prefixing
+                prefix = "$." if len(namespace) < 1 else "$." + ".".join(namespace) + "."
+                yield StateSerializer.to_json({f"{prefix}{key}": value for key, value in chunk.items()}) + "\n"
 
 
 @router.post(

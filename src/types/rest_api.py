@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from src.types.state import (
     InitialState,
     StateWithCalendar,
-    StateWithCompletedReschedulingProposals,
+    StateWithInviteeMessages,
     StateWithInvitees,
     StateWithPendingReschedulingProposals,
 )
@@ -49,13 +49,7 @@ class Resume(BaseModel):
 
 
 # Union type for all possible state types that can be returned from the graph
-State = (
-    InitialState
-    | StateWithCalendar
-    | StateWithInvitees
-    | StateWithPendingReschedulingProposals
-    | StateWithCompletedReschedulingProposals
-)
+State = InitialState | StateWithCalendar | StateWithInvitees | StateWithPendingReschedulingProposals | StateWithInviteeMessages
 
 # Union type for all possible stream responses
 StreamResponse = StreamlinedAIMessageChunk | State | Interrupt

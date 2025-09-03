@@ -7,7 +7,6 @@
         "**/.pytest_cache": true,
         "**/.git": true,
         "**/.DS_Store": true,
-        "**/__init__.py": true,
     },
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "charliermarsh.ruff",

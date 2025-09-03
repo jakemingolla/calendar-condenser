@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from langgraph.graph import END, START, StateGraph
 
 from src.types.messaging import IncomingMessage, OutgoingMessage
+from src.types.nodes import NodeResponse
 from src.types.rescheduled_event import PendingRescheduledEvent
 from src.types.state import State
 from src.types.user import User
@@ -18,21 +19,32 @@ class InitialState(State):
     pending_rescheduling_proposals: list[PendingRescheduledEvent]
 
 
-class StateWithSentMessage(InitialState):
+class SendMessageResponse(NodeResponse):
     sent_message: OutgoingMessage
 
 
-class StateWithReceivedMessage(StateWithSentMessage):
+class ReceiveMessageResponse(NodeResponse):
     received_message: IncomingMessage
 
 
-class StateWithMessageAnalysis(StateWithReceivedMessage):
+class AnalyzeMessageResponse(NodeResponse):
     message_analysis: MessageAnalysis
 
 
-async def send_message(state: InitialState) -> StateWithSentMessage:
-    return StateWithSentMessage.from_previous_state(
-        state,
+class StateWithSentMessage(InitialState, SendMessageResponse):
+    pass
+
+
+class StateWithReceivedMessage(StateWithSentMessage, ReceiveMessageResponse):
+    pass
+
+
+class StateWithMessageAnalysis(StateWithReceivedMessage, AnalyzeMessageResponse):
+    pass
+
+
+async def send_message(state: InitialState) -> SendMessageResponse:
+    return SendMessageResponse(
         sent_message=OutgoingMessage(
             content="I need to reschedule this event because I have a conflict.",
             sent_at=datetime.now(ZoneInfo(state.user.timezone)),
@@ -42,9 +54,8 @@ async def send_message(state: InitialState) -> StateWithSentMessage:
     )
 
 
-async def receive_message(state: StateWithSentMessage) -> StateWithReceivedMessage:
-    return StateWithReceivedMessage.from_previous_state(
-        state,
+async def receive_message(state: StateWithSentMessage) -> ReceiveMessageResponse:
+    return ReceiveMessageResponse(
         received_message=IncomingMessage(
             content="Yes, that works for me.",
             sent_at=datetime.now(ZoneInfo(state.user.timezone)),
@@ -54,9 +65,8 @@ async def receive_message(state: StateWithSentMessage) -> StateWithReceivedMessa
     )
 
 
-async def analyze_message(state: StateWithReceivedMessage) -> StateWithMessageAnalysis:
-    return StateWithMessageAnalysis.from_previous_state(
-        state,
+async def analyze_message(state: StateWithReceivedMessage) -> AnalyzeMessageResponse:
+    return AnalyzeMessageResponse(
         message_analysis="positive",
     )
 
