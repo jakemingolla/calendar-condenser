@@ -17,4 +17,4 @@ def mock_initial_state() -> InitialState:
 
 @pytest.fixture
 def mock_state_with_calendar(mock_initial_state: InitialState) -> StateWithCalendar:
-    return StateWithCalendar.from_previous_state(mock_initial_state, calendar=my_calendar)
+    return StateWithCalendar.model_validate(dict(mock_initial_state, calendar=my_calendar))

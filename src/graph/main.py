@@ -1,7 +1,4 @@
-from typing import Literal, TypedDict
-
 from langgraph.graph import END, StateGraph
-from langgraph.types import Send
 
 from src.domains.mock_user.mock_user_provider import MockUserProvider
 from src.graph.nodes.before_rescheduling_proposals.main import before_rescheduling_proposals
@@ -12,53 +9,18 @@ from src.graph.nodes.get_rescheduling_proposals.main import get_rescheduling_pro
 from src.graph.nodes.introduction.main import introduction
 from src.graph.nodes.load_calendar.main import load_calendar
 from src.graph.nodes.load_invitees.main import load_invitees
+from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.main import (
+    invoke_send_rescheduling_proposal_to_invitee,
+    send_rescheduling_proposal_to_invitees,
+)
+from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.main import (
+    uncompiled_graph as send_rescheduling_proposal_to_invitee_uncompiled_subgraph,
+)
 from src.graph.nodes.summarize_calendar.main import summarize_calendar
-from src.graph.send_rescheduling_proposal_to_invitee import (
-    InitialState as SendReschedulingProposalToInviteeInitialState,
-)
-from src.graph.send_rescheduling_proposal_to_invitee import (
-    uncompiled_graph as send_rescheduling_proposal_to_invitee_uncompiled_graph,
-)
-from src.types.messaging import IncomingMessage, OutgoingMessage
-from src.types.state import (
-    InitialState,
-    StateWithPendingReschedulingProposals,
-)
-from src.types.user import UserId
+from src.types.state import InitialState
 
 user_provider = MockUserProvider()
-send_rescheduling_proposal_to_invitee_subgraph = send_rescheduling_proposal_to_invitee_uncompiled_graph.compile()
-
-
-class InvokeSendReschedulingProposalToInviteeOutput(TypedDict):
-    invitee_messages: dict[UserId, list[IncomingMessage | OutgoingMessage]]
-
-
-async def invoke_send_rescheduling_proposal_to_invitee(
-    subgraph_input: SendReschedulingProposalToInviteeInitialState,
-) -> dict[Literal["conversations_by_invitee"], dict[UserId, list[IncomingMessage | OutgoingMessage]]]:
-    subgraph_output = await send_rescheduling_proposal_to_invitee_subgraph.ainvoke(input=subgraph_input)
-    sent_message: OutgoingMessage = subgraph_output["sent_message"]
-    received_message: IncomingMessage = subgraph_output["received_message"]
-    return {
-        "conversations_by_invitee": {
-            subgraph_input.invitee.id: [sent_message, received_message],
-        },
-    }
-
-
-async def send_rescheduling_proposal_to_invitees(state: StateWithPendingReschedulingProposals) -> list[Send]:
-    return [
-        Send(
-            "invoke_send_rescheduling_proposal_to_invitee",
-            SendReschedulingProposalToInviteeInitialState(
-                user=state.user,
-                invitee=invitee,  # TODO: Handle multiple invitees
-                pending_rescheduling_proposals=state.pending_rescheduling_proposals,
-            ),
-        )
-        for invitee in state.invitees
-    ]
+send_rescheduling_proposal_to_invitee_subgraph = send_rescheduling_proposal_to_invitee_uncompiled_subgraph.compile()
 
 
 uncompiled_graph = StateGraph(InitialState)
