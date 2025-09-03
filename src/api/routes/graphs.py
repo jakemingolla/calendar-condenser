@@ -35,19 +35,20 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
     else:
         input = InitialState(date=date, user=me)
 
-    async for mode, chunk in graph.astream(
+    async for namespace, mode, chunk in graph.astream(
         input=input,
         stream_mode=["values", "messages", "updates"],
         config={"configurable": {"thread_id": str(thread_id)}},
+        subgraphs=True,
     ):
-        if mode == "values":
+        if mode == "values" and isinstance(chunk, dict):
             yield StateSerializer.to_json(chunk) + "\n"
         elif mode == "messages":
-            await sleep(random() / 10)
             for message in chunk:
                 if isinstance(message, AIMessageChunk):
                     source = message.additional_kwargs.get("source", "")
                     if "public" in source:
+                        await sleep(random() / 10)
                         yield message.model_dump_json().replace("\n", "\\n") + "\n"
         elif mode == "updates" and isinstance(chunk, dict):
             interrupt = chunk.get("__interrupt__", ({},))[0]
@@ -59,6 +60,9 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
                     ).model_dump_json()
                     + "\n"
                 )
+            elif len(namespace) > 0:
+                # TODO
+                yield StateSerializer.to_json(chunk) + "\n"
 
 
 @router.post(
