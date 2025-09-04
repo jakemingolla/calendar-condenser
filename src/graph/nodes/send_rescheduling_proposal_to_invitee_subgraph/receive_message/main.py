@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -7,8 +8,10 @@ from src.types.messaging import IncomingMessage
 
 
 async def receive_message(state: StateWithSentMessage) -> ReceiveMessageResponse:
+    await asyncio.sleep(3)
     return ReceiveMessageResponse(
         received_message=IncomingMessage(
+            platform_id="slack",
             content="Yes, that works for me.",
             sent_at=datetime.now(ZoneInfo(state.user.timezone)),
             from_user=state.invitee,

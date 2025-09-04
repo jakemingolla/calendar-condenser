@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -18,7 +19,7 @@ async def get_rescheduling_proposals(state: StateWithInvitees) -> GetReschedulin
             explanation="I need to reschedule this event because I have a conflict.",
         ),
     ]
-    # await asyncio.sleep(3)
+    await asyncio.sleep(3)
 
     return GetReschedulingProposalsResponse(
         pending_rescheduling_proposals=pending_rescheduling_proposals,

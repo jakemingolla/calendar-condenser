@@ -1,10 +1,9 @@
 from langgraph.graph import END, StateGraph
 
-from src.domains.mock_user.mock_user_provider import MockUserProvider
 from src.graph.nodes.before_rescheduling_proposals.main import before_rescheduling_proposals
+from src.graph.nodes.conclusion.main import conclusion
 from src.graph.nodes.confirm_rescheduling_proposals.main import confirm_rescheduling_proposals
 from src.graph.nodes.confirm_start.main import confirm_start
-from src.graph.nodes.final_summarization.main import final_summarization
 from src.graph.nodes.get_rescheduling_proposals.main import get_rescheduling_proposals
 from src.graph.nodes.introduction.main import introduction
 from src.graph.nodes.load_calendar.main import load_calendar
@@ -20,7 +19,6 @@ from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.main import 
 from src.graph.nodes.summarize_calendar.main import summarize_calendar
 from src.types.state import InitialState
 
-user_provider = MockUserProvider()
 send_rescheduling_proposal_to_invitee_subgraph = send_rescheduling_proposal_to_invitee_uncompiled_subgraph.compile()
 
 
@@ -39,7 +37,7 @@ uncompiled_graph.add_node("get_rescheduling_proposals", get_rescheduling_proposa
 uncompiled_graph.add_node("confirm_rescheduling_proposals", confirm_rescheduling_proposals)
 uncompiled_graph.add_node("send_rescheduling_proposal_to_invitees", send_rescheduling_proposal_to_invitees)
 uncompiled_graph.add_node("invoke_send_rescheduling_proposal_to_invitee", invoke_send_rescheduling_proposal_to_invitee)  # type: ignore TODO
-uncompiled_graph.add_node("final_summarization", final_summarization)
+uncompiled_graph.add_node("conclusion", conclusion)
 
 uncompiled_graph.add_edge("load_user", "introduction")
 uncompiled_graph.add_edge("introduction", "confirm_start")
@@ -54,8 +52,8 @@ uncompiled_graph.add_conditional_edges(
     send_rescheduling_proposal_to_invitees,
     ["invoke_send_rescheduling_proposal_to_invitee"],
 )
-uncompiled_graph.add_edge("invoke_send_rescheduling_proposal_to_invitee", "final_summarization")
-uncompiled_graph.add_edge("final_summarization", END)
+uncompiled_graph.add_edge("invoke_send_rescheduling_proposal_to_invitee", "conclusion")
+uncompiled_graph.add_edge("conclusion", END)
 
 
 compiled_graph = uncompiled_graph.compile()

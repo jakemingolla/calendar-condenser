@@ -4,7 +4,7 @@ from typing import override
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from src.types.messaging_platform import MessageReceipt, MessageReceiptNotFoundError, MessagingPlatform
+from src.types.messaging_platform import MessageReceipt, MessageReceiptNotFoundError, MessagingPlatform, MessagingPlatformId
 from src.types.user import User
 
 message_receipt_created_at: dict[MessageReceipt, datetime] = {}
@@ -44,6 +44,8 @@ def get_negative_response() -> str:
 
 
 class MockMessagingPlatform(MessagingPlatform):
+    id: MessagingPlatformId = "slack"
+
     @override
     async def send_message(self, user: User, message: str) -> MessageReceipt:
         receipt = MessageReceipt(uuid4())

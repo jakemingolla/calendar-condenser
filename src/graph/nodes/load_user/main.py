@@ -4,7 +4,6 @@ from src.types.state import InitialState
 
 
 async def load_user(state: InitialState) -> LoadUserResponse:
-    # await asyncio.sleep(2)
     return LoadUserResponse(
         user=me,
     )

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import NewType, Self
+from typing import Literal, NewType, Self
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from src.types.user import User
 
 MessageReceipt = NewType("MessageReceipt", UUID)
+MessagingPlatformId = Literal["slack", "microsoft-teams"]
 
 
 class MessageReceiptNotFoundError(Exception):
@@ -17,6 +18,8 @@ class MessageReceiptNotFoundError(Exception):
 
 
 class MessagingPlatform(ABC, BaseModel):
+    id: MessagingPlatformId
+
     @abstractmethod
     async def send_message(self: Self, user: User, message: str) -> MessageReceipt:
         """Send a message to a user.

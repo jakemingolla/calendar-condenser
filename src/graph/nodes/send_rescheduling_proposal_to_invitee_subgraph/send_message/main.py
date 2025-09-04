@@ -9,6 +9,7 @@ from src.types.messaging import OutgoingMessage
 async def send_message(state: InitialState) -> SendMessageResponse:
     return SendMessageResponse(
         sent_message=OutgoingMessage(
+            platform_id="slack",
             content="I need to reschedule this event because I have a conflict.",
             sent_at=datetime.now(ZoneInfo(state.user.timezone)),
             from_user=state.user,

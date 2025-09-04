@@ -1,6 +1,9 @@
 from typing import Annotated
 
-from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.analyze_message.types import AnalyzeMessageResponse
+from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.analyze_message.types import (
+    AnalyzeMessageResponse,
+    MessageAnalysis,
+)
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.receive_message.types import ReceiveMessageResponse
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.send_message.types import SendMessageResponse
 from src.types.higher_order import BrandedBaseModel
@@ -31,3 +34,4 @@ class StateWithMessageAnalysis(StateWithReceivedMessage, AnalyzeMessageResponse)
 
 class InvokeSendReschedulingProposalResponse(NodeResponse):
     conversations_by_invitee: Annotated[dict[UserId, list[IncomingMessage | OutgoingMessage]], merge_dicts]
+    analysis_by_invitee: Annotated[dict[UserId, MessageAnalysis], merge_dicts]
