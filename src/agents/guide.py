@@ -1,13 +1,11 @@
 from datetime import datetime
 
-from langchain_openai import ChatOpenAI
-
+from src.agents.helpers.models import get_llm
 from src.agents.helpers.serialization import serialize_event
-from src.callbacks.add_source_to_messages import AddSourceToMessagesCallback
 from src.types.state import StateWithCalendar
 from src.types.user import User
 
-unstructured_llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="guide.public")])
+unstructured_llm = get_llm(source="guide.public")
 
 
 def get_baseline_context(user: User, date: datetime) -> str:

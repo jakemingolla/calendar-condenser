@@ -2,15 +2,12 @@ from asyncio import sleep
 from enum import StrEnum
 from typing import cast
 
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from src.callbacks.add_source_to_messages import AddSourceToMessagesCallback
+from src.agents.helpers.models import get_llm
 from src.domains.mock_messaging.mock_messaging_platform import MockMessagingPlatform
 from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.user import User
-
-llm = ChatOpenAI(model="gpt-4o-mini")
 
 messaging_platform = MockMessagingPlatform()
 
@@ -35,16 +32,11 @@ class ReschedulingProposalResolutionOutput(BaseModel):
     reason: str = Field(description="The reason for the resolution.")
 
 
-structured_llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    callbacks=[AddSourceToMessagesCallback(source="messaging.structured_output")],
-).with_structured_output(
+structured_llm = get_llm(source="messaging.structured_output").with_structured_output(
     ReschedulingProposalResolutionOutput,
 )
-unstructured_llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    callbacks=[AddSourceToMessagesCallback(source="messaging.public")],
-)
+
+unstructured_llm = get_llm(source="messaging.public")
 
 
 async def determine_rescheduling_proposal_resolution(

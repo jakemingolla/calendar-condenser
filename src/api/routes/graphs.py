@@ -33,21 +33,20 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
     if resume:
         input = Command(resume=resume.value)
     else:
-        input = InitialState(date=date, user=me)
+        input = InitialState(date=date)
 
-    async for mode, chunk in graph.astream(
+    async for namespace, mode, chunk in graph.astream(
         input=input,
-        stream_mode=["values", "messages", "updates"],
+        stream_mode=["messages", "updates"],
         config={"configurable": {"thread_id": str(thread_id)}},
+        subgraphs=True,
     ):
-        if mode == "values":
-            yield StateSerializer.to_json(chunk) + "\n"
-        elif mode == "messages":
-            await sleep(random() / 10)
+        if mode == "messages":
             for message in chunk:
                 if isinstance(message, AIMessageChunk):
                     source = message.additional_kwargs.get("source", "")
                     if "public" in source:
+                        await sleep(random() / 10)
                         yield message.model_dump_json().replace("\n", "\\n") + "\n"
         elif mode == "updates" and isinstance(chunk, dict):
             interrupt = chunk.get("__interrupt__", ({},))[0]
@@ -59,6 +58,10 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
                     ).model_dump_json()
                     + "\n"
                 )
+            else:
+                # TODO note on prefixing
+                prefix = "$." if len(namespace) < 1 else "$." + ".".join(namespace) + "."
+                yield StateSerializer.to_json({f"{prefix}{key}": value for key, value in chunk.items()}) + "\n"
 
 
 @router.post(
@@ -68,9 +71,9 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
     description="""
     Streams the execution results from a graph, including:
 
-    - **State updates**: Various state objects (InitialState, StateWithCalendar, etc.)
-      that show the progression through the graph execution
+    - **State updates**: Changes to the state of the graph or subgraphs
     - **AI messages**: AIMessageChunk objects containing AI-generated responses
+    - **Interrupts**: Used when the graph is waiting for user input
 
     The response is a stream where each line contains a JSON object.
     """,

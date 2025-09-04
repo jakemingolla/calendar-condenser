@@ -2,12 +2,13 @@ from typing import Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel, Field
 
-from src.types.state import (
-    InitialState,
-    StateWithCalendar,
-    StateWithCompletedReschedulingProposals,
-    StateWithInvitees,
-    StateWithPendingReschedulingProposals,
+from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProposalsResponse
+from src.graph.nodes.load_calendar.types import LoadCalendarResponse
+from src.graph.nodes.load_invitees.types import LoadInviteesResponse
+from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import (
+    AnalyzeMessageResponse,
+    ReceiveMessageResponse,
+    SendMessageResponse,
 )
 
 
@@ -48,14 +49,25 @@ class Resume(BaseModel):
     id: str = Field(description="The corresponding Interrupt id")
 
 
-# Union type for all possible state types that can be returned from the graph
-State = (
-    InitialState
-    | StateWithCalendar
-    | StateWithInvitees
-    | StateWithPendingReschedulingProposals
-    | StateWithCompletedReschedulingProposals
+GraphUpdate = (
+    dict[Literal["$.load_user"], None]
+    | dict[Literal["$.introduction"], None]
+    | dict[Literal["$.confirm_start"], None]
+    | dict[Literal["$.load_calendar"], LoadCalendarResponse]
+    | dict[Literal["$.summarize_calendar"], None]
+    | dict[Literal["$.load_invitees"], LoadInviteesResponse]
+    | dict[Literal["$.before_rescheduling_proposals"], None]
+    | dict[Literal["$.get_rescheduling_proposals"], GetReschedulingProposalsResponse]
+    | dict[Literal["$.confirm_rescheduling_proposals"], None]
+    | dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee"], None]  # TODO
+    | dict[Literal["$.final_summarization"], None]
+)
+
+SubgraphUpdate = (
+    dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee:[uuid].send_message"], SendMessageResponse]
+    | dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee:[uuid].receive_message"], ReceiveMessageResponse]
+    | dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee:[uuid].analyze_message"], AnalyzeMessageResponse]
 )
 
 # Union type for all possible stream responses
-StreamResponse = StreamlinedAIMessageChunk | State | Interrupt
+StreamResponse = StreamlinedAIMessageChunk | GraphUpdate | SubgraphUpdate | Interrupt

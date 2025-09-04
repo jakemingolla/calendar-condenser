@@ -22,4 +22,4 @@ lint:  ## Run linters
 	uv run ruff check && uv run basedpyright
 
 dev:   ## Run the project in development mode
-	@uv run fastapi dev src/api/main.py
+	@uvicorn src.api.main:app --reload

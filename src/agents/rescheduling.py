@@ -2,11 +2,10 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import cast
 
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from src.agents.helpers.models import get_llm
 from src.agents.helpers.serialization import serialize_event
-from src.callbacks.add_source_to_messages import AddSourceToMessagesCallback
 from src.types.calendar import Calendar
 from src.types.calendar_event import CalendarEventId
 from src.types.rescheduled_event import PendingRescheduledEvent
@@ -26,11 +25,11 @@ class ReschedulingProposal(BaseModel):
     )
 
 
-unstructured_llm = ChatOpenAI(model="gpt-4o-mini", callbacks=[AddSourceToMessagesCallback(source="rescheduling.private")])
-structured_llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    callbacks=[AddSourceToMessagesCallback(source="rescheduling.structured_output")],
-).with_structured_output(ReschedulingProposal, method="json_schema")
+unstructured_llm = get_llm(source="rescheduling.private")
+structured_llm = get_llm(source="rescheduling.structured_output").with_structured_output(
+    ReschedulingProposal,
+    method="json_schema",
+)
 
 
 def serialize_invitee_other_events_on(date: datetime, invitee: User, calendar: Calendar, subject: User) -> str:
