@@ -9,6 +9,7 @@ from src.graph.nodes.get_rescheduling_proposals.main import get_rescheduling_pro
 from src.graph.nodes.introduction.main import introduction
 from src.graph.nodes.load_calendar.main import load_calendar
 from src.graph.nodes.load_invitees.main import load_invitees
+from src.graph.nodes.load_user.main import load_user
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.main import (
     invoke_send_rescheduling_proposal_to_invitee,
     send_rescheduling_proposal_to_invitees,
@@ -25,8 +26,9 @@ send_rescheduling_proposal_to_invitee_subgraph = send_rescheduling_proposal_to_i
 
 uncompiled_graph = StateGraph(InitialState)
 
-uncompiled_graph.set_entry_point("introduction")
+uncompiled_graph.set_entry_point("load_user")
 
+uncompiled_graph.add_node("load_user", load_user)
 uncompiled_graph.add_node("introduction", introduction)
 uncompiled_graph.add_node("confirm_start", confirm_start)
 uncompiled_graph.add_node("summarize_calendar", summarize_calendar)
@@ -39,6 +41,7 @@ uncompiled_graph.add_node("send_rescheduling_proposal_to_invitees", send_resched
 uncompiled_graph.add_node("invoke_send_rescheduling_proposal_to_invitee", invoke_send_rescheduling_proposal_to_invitee)  # type: ignore TODO
 uncompiled_graph.add_node("final_summarization", final_summarization)
 
+uncompiled_graph.add_edge("load_user", "introduction")
 uncompiled_graph.add_edge("introduction", "confirm_start")
 uncompiled_graph.add_edge("confirm_start", "load_calendar")
 uncompiled_graph.add_edge("load_calendar", "summarize_calendar")

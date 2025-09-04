@@ -33,7 +33,7 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
     if resume:
         input = Command(resume=resume.value)
     else:
-        input = InitialState(date=date, user=me)
+        input = InitialState(date=date)
 
     async for namespace, mode, chunk in graph.astream(
         input=input,

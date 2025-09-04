@@ -50,7 +50,8 @@ class Resume(BaseModel):
 
 
 GraphUpdate = (
-    dict[Literal["$.introduction"], None]
+    dict[Literal["$.load_user"], None]
+    | dict[Literal["$.introduction"], None]
     | dict[Literal["$.confirm_start"], None]
     | dict[Literal["$.load_calendar"], LoadCalendarResponse]
     | dict[Literal["$.summarize_calendar"], None]

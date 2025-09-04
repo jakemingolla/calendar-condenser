@@ -1,9 +1,9 @@
 from src.domains.mock_user.mock_user_provider import me
 from src.graph.nodes.load_user.types import LoadUserResponse
-from src.types.state import StateWithCalendar
+from src.types.state import InitialState
 
 
-async def load_user(state: StateWithCalendar) -> LoadUserResponse:
+async def load_user(state: InitialState) -> LoadUserResponse:
     # await asyncio.sleep(2)
     return LoadUserResponse(
         user=me,

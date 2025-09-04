@@ -3,17 +3,20 @@ from datetime import datetime
 from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProposalsResponse
 from src.graph.nodes.load_calendar.types import LoadCalendarResponse
 from src.graph.nodes.load_invitees.types import LoadInviteesResponse
+from src.graph.nodes.load_user.types import LoadUserResponse
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import InvokeSendReschedulingProposalResponse
 from src.types.higher_order import BrandedBaseModel
-from src.types.user import User
 
 
 class InitialState(BrandedBaseModel):
-    user: User
     date: datetime
 
 
-class StateWithCalendar(InitialState, LoadCalendarResponse):
+class StateWithUser(InitialState, LoadUserResponse):
+    pass
+
+
+class StateWithCalendar(StateWithUser, LoadCalendarResponse):
     pass
 
 
