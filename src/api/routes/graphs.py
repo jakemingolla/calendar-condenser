@@ -71,9 +71,9 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
     description="""
     Streams the execution results from a graph, including:
 
-    - **State updates**: Various state objects (InitialState, StateWithCalendar, etc.)
-      that show the progression through the graph execution
+    - **State updates**: Changes to the state of the graph or subgraphs
     - **AI messages**: AIMessageChunk objects containing AI-generated responses
+    - **Interrupts**: Used when the graph is waiting for user input
 
     The response is a stream where each line contains a JSON object.
     """,
