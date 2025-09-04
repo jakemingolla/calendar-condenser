@@ -9,6 +9,7 @@ from src.types.messaging import IncomingMessage
 async def receive_message(state: StateWithSentMessage) -> ReceiveMessageResponse:
     return ReceiveMessageResponse(
         received_message=IncomingMessage(
+            platform_id="slack",
             content="Yes, that works for me.",
             sent_at=datetime.now(ZoneInfo(state.user.timezone)),
             from_user=state.invitee,
