@@ -28,5 +28,5 @@ class StateWithPendingReschedulingProposals(StateWithInvitees, GetReschedulingPr
     pass
 
 
-class StateWithInviteeMessages(StateWithPendingReschedulingProposals, InvokeSendReschedulingProposalResponse):
+class StateAfterSendingReschedulingProposals(StateWithPendingReschedulingProposals, InvokeSendReschedulingProposalResponse):
     pass

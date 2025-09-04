@@ -2,7 +2,8 @@ from datetime import datetime
 
 from src.agents.helpers.models import get_llm
 from src.agents.helpers.serialization import serialize_event
-from src.types.state import StateWithCalendar
+from src.domains.mock_user.mock_user_provider import user_provider
+from src.types.state import StateAfterSendingReschedulingProposals, StateWithCalendar
 from src.types.user import User
 
 unstructured_llm = get_llm(source="guide.public")
@@ -106,6 +107,34 @@ async def anticipate_rescheduling_proposals(state: StateWithCalendar) -> None:
             "- Explain to the user you will be generating rescheduling proposals for their calendar events.\n",
             "- Explain that you will try and find the best time to reschedule their events.\n",
             "- Indicate you are thinking very hard by using language like 'Hmmm...' or 'Let me think about this...'.\n",
+            "\n",
+            formatting_rules,
+        ),
+    )
+
+    await unstructured_llm.ainvoke(prompt)
+
+
+async def conclusion(state: StateAfterSendingReschedulingProposals) -> None:
+    baseline_context = get_baseline_context(state.user, state.date)
+    formatting_rules = get_formatting_rules()
+    responses_from_invitees = "".join(
+        f"{user_provider.get_user(user_id).given_name} has a {analysis} analysis.\n"
+        for user_id, analysis in state.analysis_by_invitee.items()
+    )
+
+    prompt = "".join(
+        (
+            baseline_context,
+            "\n",
+            "CORE OBJECTIVE:\n",
+            "- Summarize the rescheduling proposals and the responses received from the invitees.\n",
+            "  - A user who accepted the rescheduling proposal has a 'positive' analysis.\n",
+            "  - A user who rejected the rescheduling proposal has a 'negative' analysis.\n",
+            "- Conclude the conversation by thanking the user for their time.\n",
+            "\n",
+            "RESPONSES FROM INVITEES:\n",
+            responses_from_invitees,
             "\n",
             formatting_rules,
         ),

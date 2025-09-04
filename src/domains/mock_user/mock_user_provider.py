@@ -60,3 +60,6 @@ class MockUserProvider(UserProvider):
         if user is None:  # type: ignore[unreachable]
             raise UserNotFoundError(user_id)
         return user
+
+
+user_provider = MockUserProvider()
