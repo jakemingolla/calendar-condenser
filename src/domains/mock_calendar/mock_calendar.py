@@ -6,9 +6,17 @@ from zoneinfo import ZoneInfo
 from pydantic import Field
 
 from src.domains.mock_calendar.mock_events import adams_event, my_first_event, my_second_event, sallys_event
-from src.domains.mock_user.mock_user_provider import adams_user, adams_user_id, me, my_user_id, sallys_user, sallys_user_id
+from src.domains.mock_user.mock_user_provider import (
+    adams_user,
+    adams_user_id,
+    me,
+    mock_users,
+    my_user_id,
+    sallys_user,
+    sallys_user_id,
+)
 from src.types.calendar import Calendar, CalendarId
-from src.types.calendar_event import CalendarEvent
+from src.types.calendar_event import CalendarEvent, CalendarEventId
 
 
 class MockCalendar(Calendar):
@@ -21,6 +29,17 @@ class MockCalendar(Calendar):
     @override
     def get_events_on(self: Self, date: datetime) -> list[CalendarEvent]:
         return [event for event in self.events if event.start_time.date() == date.date()]
+
+    @override
+    async def change_event_time(self: Self, event_id: CalendarEventId, new_start_time: datetime, new_end_time: datetime) -> None:
+        for event in self.events:
+            if event.id == event_id:
+                event.start_time = new_start_time
+                event.end_time = new_end_time
+                event.updated_at = datetime.now(tz=ZoneInfo(mock_users[event.owner].timezone))
+                return
+        msg = f"Event with id {event_id} not found"
+        raise ValueError(msg)
 
 
 my_calendar = MockCalendar(

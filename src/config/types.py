@@ -10,3 +10,37 @@ class Config(BaseSettings):
         default=False,
         description="If False, skip LLM messages in the UI to speed up graph execution.",
     )
+
+    delay_seconds_load_calendar: float = Field(
+        default=0,
+        description="The number of seconds to delay the loading of the calendar. Simulates network latency.",
+    )
+    delay_seconds_load_invitees: float = Field(
+        default=0,
+        description="The number of seconds to delay the loading of the invitees. Simulates network latency.",
+    )
+    delay_seconds_load_user: float = Field(
+        default=0,
+        description="The number of seconds to delay the loading of the user. Simulates network latency.",
+    )
+    delay_seconds_get_rescheduling_proposals: float = Field(
+        default=0,
+        description="The number of seconds to delay the getting of the rescheduling proposals. Simulates network latency.",
+    )
+    delay_seconds_update_calendar: float = Field(
+        default=0,
+        description="The number of seconds to delay the updating of the calendar. Simulates network latency.",
+    )
+
+    delay_seconds_send_rescheduling_proposal_to_invitee_send_message: float = Field(
+        default=0,
+        description="The number of seconds to delay the sending of the message. Simulates network latency.",
+    )
+    delay_seconds_send_rescheduling_proposal_to_invitee_receive_message: float = Field(
+        default=0,
+        description="The number of seconds to delay the receiving of the message. Simulates network latency.",
+    )
+    delay_seconds_send_rescheduling_proposal_to_invitee_analyze_message: float = Field(
+        default=0,
+        description="The number of seconds to delay the analysis of the message. Simulates network latency.",
+    )

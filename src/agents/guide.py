@@ -1,8 +1,7 @@
 from datetime import datetime
 
 from src.agents.helpers.models import get_llm
-from src.agents.helpers.serialization import serialize_event
-from src.domains.mock_user.mock_user_provider import user_provider
+from src.agents.helpers.serialization import serialize_event, serialize_rescheduling_proposal
 from src.types.state import StateAfterSendingReschedulingProposals, StateWithCalendar
 from src.types.user import User
 
@@ -28,13 +27,16 @@ def get_formatting_rules() -> str:
         (
             "FORMATTING RULES:\n",
             "- You MUST respond with a short sentence.\n",
-            "- You are speaking directly to the user. You must be engaging and friendly.\n",
+            "- You are speaking directly to the user. You MUST be engaging and friendly.\n",
             "- You MUST use Markdown formatting to style your response.\n",
+            "- NEVER use code blocks in your response.\n",
             "- You MUST respond in English.\n",
             "- You MUST NOT use any emojis.\n",
-            "- Do NOT include numbered lists in your response.\n",
             "- Do NOT include semicolons in your response.\n",
             "- Do NOT mention you are working for the calendar-condenser application.\n",
+            "- you MUST use bold text to highlight important information.\n",
+            "FORMATTING SUGGESTIONS:\n",
+            "- Use numbered lists to list series of steps, but do NOT list the 'Step 1' etc. in the list.\n",
         ),
     )
 
@@ -115,27 +117,57 @@ async def anticipate_rescheduling_proposals(state: StateWithCalendar) -> None:
     await unstructured_llm.ainvoke(prompt)
 
 
+async def summarize_state_after_sending_rescheduling_proposals(state: StateAfterSendingReschedulingProposals) -> None:
+    baseline_context = get_baseline_context(state.user, state.date)
+    formatting_rules = get_formatting_rules()
+    accepted_rescheduling_proposals = state.accepted_rescheduling_proposals
+    rejected_rescheduling_proposals = state.rejected_rescheduling_proposals
+
+    if len(rejected_rescheduling_proposals) == 0 and len(accepted_rescheduling_proposals) > 0:
+        prompt = "".join(
+            (
+                baseline_context,
+                "\n",
+                "CORE OBJECTIVE:\n",
+                "- Explain to the user that all rescheduling proposals were accepted.\n",
+                "- Explain that you will now update the user's calendar to reflect the new event times.\n",
+                "ACCEPTED RESCHEDULING PROPOSALS:\n",
+                "".join(serialize_rescheduling_proposal(proposal) for proposal in accepted_rescheduling_proposals),
+                "\n",
+                formatting_rules,
+            ),
+        )
+    else:
+        prompt = "".join(
+            (
+                baseline_context,
+                "\n",
+                "CORE OBJECTIVE:\n",
+                "- Explain to the user that some rescheduling proposals were rejected.\n",
+                "- Explain that you will not update the user's calendar to reflect the new event times.\n",
+                "REJECTED RESCHEDULING PROPOSALS:\n",
+                "".join(serialize_rescheduling_proposal(proposal) for proposal in rejected_rescheduling_proposals),
+                "\n",
+                formatting_rules,
+            ),
+        )
+
+    await unstructured_llm.ainvoke(prompt)
+
+
 async def conclusion(state: StateAfterSendingReschedulingProposals) -> None:
     baseline_context = get_baseline_context(state.user, state.date)
     formatting_rules = get_formatting_rules()
-    responses_from_invitees = "".join(
-        f"{user_provider.get_user(user_id).given_name} has a {analysis} analysis.\n"
-        for user_id, analysis in state.analysis_by_invitee.items()
-    )
-
     prompt = "".join(
         (
             baseline_context,
             "\n",
             "CORE OBJECTIVE:\n",
-            "- Summarize the rescheduling proposals and the responses received from the invitees.\n",
-            "  - A user who accepted the rescheduling proposal has a 'positive' analysis.\n",
-            "  - A user who rejected the rescheduling proposal has a 'negative' analysis.\n",
-            "- Conclude the conversation by thanking the user for their time.\n",
-            "\n",
-            "RESPONSES FROM INVITEES:\n",
-            responses_from_invitees,
-            "\n",
+            "- Explain to the user that you've successfuly updated the user's calendar with the new event times.\n",
+            "- Explain you've tried to optimize the user's calendar for the best use of their time.\n",
+            "- Thank the user for their time.\n",
+            "RULES:\n",
+            "- You MUST have a celebratory tone in your response.\n",
             formatting_rules,
         ),
     )

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import NewType, Self
 from uuid import UUID
 
-from src.types.calendar_event import CalendarEvent
+from src.types.calendar_event import CalendarEvent, CalendarEventId
 from src.types.higher_order import BrandedBaseModel
 from src.types.user import UserId
 
@@ -30,3 +30,7 @@ class Calendar(BrandedBaseModel, ABC):
             A list of events on the given date.
 
         """
+
+    @abstractmethod
+    async def change_event_time(self: Self, event_id: CalendarEventId, new_start_time: datetime, new_end_time: datetime) -> None:
+        """Change the time of an event."""

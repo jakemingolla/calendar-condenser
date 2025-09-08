@@ -7,15 +7,15 @@ from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.analyze_mess
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.receive_message.main import receive_message
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.send_message.main import send_message
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import (
+    FinalState,
     InitialState,
-    InvokeSendReschedulingProposalResponse,
     StateWithMessageAnalysis,
 )
+from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedRescheduledEvent
 from src.types.state import StateWithPendingReschedulingProposals
 
 if TYPE_CHECKING:
     from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.analyze_message.types import MessageAnalysis
-    from src.types.messaging import IncomingMessage, OutgoingMessage
 
 
 uncompiled_graph = StateGraph(
@@ -37,19 +37,33 @@ compiled_graph = uncompiled_graph.compile()
 
 async def invoke_send_rescheduling_proposal_to_invitee(
     subgraph_input: InitialState,
-) -> InvokeSendReschedulingProposalResponse:
+) -> FinalState:
+    initial_proposals = subgraph_input.pending_rescheduling_proposals
     subgraph_output = await compiled_graph.ainvoke(input=subgraph_input)
-    sent_message: OutgoingMessage = subgraph_output["sent_message"]
-    received_message: IncomingMessage = subgraph_output["received_message"]
     message_analysis: MessageAnalysis = subgraph_output["message_analysis"]
-    return InvokeSendReschedulingProposalResponse(
-        conversations_by_invitee={
-            subgraph_input.invitee.id: [sent_message, received_message],
-        },
-        analysis_by_invitee={
-            subgraph_input.invitee.id: message_analysis,
-        },
-    )
+
+    if message_analysis == "positive":
+        accepted_rescheduling_proposals = [
+            AcceptedRescheduledEvent(
+                **proposal.model_dump(),
+            )
+            for proposal in initial_proposals
+        ]
+        return FinalState(
+            rejected_rescheduling_proposals=[],
+            accepted_rescheduling_proposals=accepted_rescheduling_proposals,
+        )
+    else:
+        rejected_rescheduling_proposals = [
+            RejectedRescheduledEvent(
+                **proposal.model_dump(),
+            )
+            for proposal in initial_proposals
+        ]
+        return FinalState(
+            rejected_rescheduling_proposals=rejected_rescheduling_proposals,
+            accepted_rescheduling_proposals=[],
+        )
 
 
 async def send_rescheduling_proposal_to_invitees(state: StateWithPendingReschedulingProposals) -> list[Send]:
