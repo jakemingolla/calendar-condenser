@@ -6,6 +6,7 @@ from src.domains.mock_calendar.mock_calendar import my_calendar
 from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProposalsResponse
 from src.types.rescheduled_event import PendingRescheduledEvent
 from src.types.state import StateWithInvitees
+from src.utilities.loading import indicate_loading
 
 
 async def get_rescheduling_proposals(state: StateWithInvitees) -> GetReschedulingProposalsResponse:
@@ -19,6 +20,8 @@ async def get_rescheduling_proposals(state: StateWithInvitees) -> GetReschedulin
             explanation="I need to reschedule this event because I have a conflict.",
         ),
     ]
+
+    indicate_loading("Generating rescheduling proposals...")
     await asyncio.sleep(3)
 
     return GetReschedulingProposalsResponse(
