@@ -10,6 +10,7 @@ from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import
     ReceiveMessageResponse,
     SendMessageResponse,
 )
+from src.types.loading import LoadingIndicator
 
 
 class AdditionalKwargs(TypedDict):
@@ -70,4 +71,4 @@ SubgraphUpdate = (
 )
 
 # Union type for all possible stream responses
-StreamResponse = StreamlinedAIMessageChunk | GraphUpdate | SubgraphUpdate | Interrupt
+StreamResponse = StreamlinedAIMessageChunk | GraphUpdate | SubgraphUpdate | Interrupt | LoadingIndicator

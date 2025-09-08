@@ -3,8 +3,10 @@ import asyncio
 from src.domains.mock_calendar.mock_calendar import my_calendar
 from src.graph.nodes.load_calendar.types import LoadCalendarResponse
 from src.types.state import InitialState
+from src.utilities.loading import indicate_loading
 
 
 async def load_calendar(state: InitialState) -> LoadCalendarResponse:
-    await asyncio.sleep(2)
+    indicate_loading("Loading your calendar...")
+    await asyncio.sleep(2.3)
     return LoadCalendarResponse(calendar=my_calendar)
