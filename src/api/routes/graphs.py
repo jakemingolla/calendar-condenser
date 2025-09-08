@@ -1,8 +1,6 @@
 import json
-from asyncio import sleep
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
-from random import random
 from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -29,6 +27,32 @@ graphs: dict[str, CompiledStateGraph[Any]] = {
 }
 
 
+def serialize_messages_chunk(chunk: Any) -> Generator[str]:  # noqa: ANN401
+    for message in chunk:
+        if isinstance(message, AIMessageChunk):
+            source = message.additional_kwargs.get("source", "")
+            if "public" in source:
+                yield message.model_dump_json().replace("\n", "\\n") + "\n"
+
+
+def serialize_custom_chunk(chunk: Any) -> Generator[str]:  # noqa: ANN401
+    if isinstance(chunk, LoadingIndicator):
+        yield chunk.model_dump_json().replace("\n", "\\n") + "\n"
+
+
+def serialize_updates_chunk(chunk: Any, namespace: tuple[str, ...]) -> Generator[str]:  # noqa: ANN401
+    if isinstance(chunk, dict):
+        interrupt = chunk.get("__interrupt__", ({},))[0]
+        if interrupt and isinstance(interrupt, GraphInterrupt):
+            yield (
+                Interrupt(value=interrupt.value.replace("\n", "\\n"), id=interrupt.id).model_dump_json().replace("\n", "\\n")
+                + "\n"
+            )
+        else:
+            prefix = "$." if len(namespace) < 1 else "$." + ".".join(namespace) + "."
+            yield StateSerializer.to_json({f"{prefix}{key}": value for key, value in chunk.items()}) + "\n"
+
+
 async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: Resume | None = None) -> AsyncGenerator[str]:
     date = datetime(2025, 8, 11, tzinfo=ZoneInfo(me.timezone))
 
@@ -44,30 +68,14 @@ async def invoke_graph(graph: CompiledStateGraph[Any], thread_id: UUID, resume: 
         subgraphs=True,
     ):
         if mode == "messages":
-            for message in chunk:
-                if isinstance(message, AIMessageChunk):
-                    source = message.additional_kwargs.get("source", "")
-                    if "public" in source:
-                        await sleep(random() / 10)
-                        yield message.model_dump_json().replace("\n", "\\n") + "\n"
+            for line in serialize_messages_chunk(chunk):
+                yield line
         elif mode == "custom":
-            if isinstance(chunk, LoadingIndicator):
-                yield chunk.model_dump_json() + "\n"
-        elif mode == "updates" and isinstance(chunk, dict):
-            interrupt = chunk.get("__interrupt__", ({},))[0]
-            if interrupt and isinstance(interrupt, GraphInterrupt):
-                yield (
-                    Interrupt(
-                        value=interrupt.value.replace("\n", "\\n"),
-                        id=interrupt.id,
-                    ).model_dump_json()
-                    + "\n"
-                )
-                return
-            else:
-                # TODO note on prefixing
-                prefix = "$." if len(namespace) < 1 else "$." + ".".join(namespace) + "."
-                yield StateSerializer.to_json({f"{prefix}{key}": value for key, value in chunk.items()}) + "\n"
+            for line in serialize_custom_chunk(chunk):
+                yield line
+        elif mode == "updates":
+            for line in serialize_updates_chunk(chunk, tuple(namespace)):
+                yield line
 
 
 @router.post(
