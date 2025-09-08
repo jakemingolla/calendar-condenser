@@ -4,7 +4,7 @@ from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProp
 from src.graph.nodes.load_calendar.types import LoadCalendarResponse
 from src.graph.nodes.load_invitees.types import LoadInviteesResponse
 from src.graph.nodes.load_user.types import LoadUserResponse
-from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import InvokeSendReschedulingProposalResponse
+from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import FinalState as SubgraphFinalState
 from src.types.higher_order import BrandedBaseModel
 
 
@@ -28,5 +28,5 @@ class StateWithPendingReschedulingProposals(StateWithInvitees, GetReschedulingPr
     pass
 
 
-class StateAfterSendingReschedulingProposals(StateWithPendingReschedulingProposals, InvokeSendReschedulingProposalResponse):
+class StateAfterSendingReschedulingProposals(StateWithPendingReschedulingProposals, SubgraphFinalState):
     pass

@@ -1,3 +1,4 @@
+import operator
 from typing import Annotated
 
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.analyze_message.types import (
@@ -9,7 +10,7 @@ from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.send_message
 from src.types.higher_order import BrandedBaseModel
 from src.types.messaging import IncomingMessage, OutgoingMessage
 from src.types.nodes import NodeResponse
-from src.types.rescheduled_event import PendingRescheduledEvent
+from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.user import User, UserId
 from src.utilities.merge_dicts import merge_dicts
 
@@ -35,3 +36,8 @@ class StateWithMessageAnalysis(StateWithReceivedMessage, AnalyzeMessageResponse)
 class InvokeSendReschedulingProposalResponse(NodeResponse):
     conversations_by_invitee: Annotated[dict[UserId, list[IncomingMessage | OutgoingMessage]], merge_dicts]
     analysis_by_invitee: Annotated[dict[UserId, MessageAnalysis], merge_dicts]
+
+
+class FinalState(BrandedBaseModel):
+    rejected_rescheduling_proposals: Annotated[list[RejectedRescheduledEvent], operator.add]
+    accepted_rescheduling_proposals: Annotated[list[AcceptedRescheduledEvent], operator.add]

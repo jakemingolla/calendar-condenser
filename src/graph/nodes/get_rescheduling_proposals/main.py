@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from src.config.main import config
 from src.domains.mock_calendar.mock_calendar import my_calendar
 from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProposalsResponse
 from src.types.rescheduled_event import PendingRescheduledEvent
@@ -22,7 +23,7 @@ async def get_rescheduling_proposals(state: StateWithInvitees) -> GetReschedulin
     ]
 
     indicate_loading("Generating rescheduling proposals...")
-    await asyncio.sleep(3)
+    await asyncio.sleep(config.delay_seconds_get_rescheduling_proposals)
 
     return GetReschedulingProposalsResponse(
         pending_rescheduling_proposals=pending_rescheduling_proposals,

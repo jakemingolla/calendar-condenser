@@ -61,6 +61,8 @@ GraphUpdate = (
     | dict[Literal["$.get_rescheduling_proposals"], GetReschedulingProposalsResponse]
     | dict[Literal["$.confirm_rescheduling_proposals"], None]
     | dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee"], None]  # TODO
+    | dict[Literal["$.update_calendar"], None]
+    | dict[Literal["$.load_calendar_after_update"], LoadCalendarResponse]
     | dict[Literal["$.conclusion"], None]
 )
 

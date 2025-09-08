@@ -8,7 +8,7 @@ from src.agents.helpers.models import get_llm
 from src.agents.helpers.serialization import serialize_event
 from src.types.calendar import Calendar
 from src.types.calendar_event import CalendarEventId
-from src.types.rescheduled_event import PendingRescheduledEvent
+from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent
 from src.types.user import User
 
 
@@ -122,3 +122,15 @@ async def generate_rescheduling_proposals(
 
     msg = f"Response is not a ReschedulingProposal object: {rescheduling_proposal}"
     raise TypeError(msg)
+
+
+async def apply_rescheduling_proposals(
+    rescheduling_proposals: list[AcceptedRescheduledEvent],
+    calendar: Calendar,
+) -> None:
+    for rescheduling_proposal in rescheduling_proposals:
+        await calendar.change_event_time(
+            rescheduling_proposal.original_event.id,
+            rescheduling_proposal.new_start_time,
+            rescheduling_proposal.new_end_time,
+        )
