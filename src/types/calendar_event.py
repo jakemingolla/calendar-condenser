@@ -1,14 +1,13 @@
 from abc import ABC
 from datetime import datetime
 from typing import Literal, NewType, Self
-from uuid import UUID
 
 from pydantic import Field
 
 from src.types.higher_order import BrandedBaseModel
 from src.types.user import UserId
 
-CalendarEventId = NewType("CalendarEventId", UUID)
+CalendarEventId = NewType("CalendarEventId", int)
 
 
 class CalendarEventInvitee(BrandedBaseModel):

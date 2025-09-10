@@ -6,6 +6,15 @@ class Config(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
     openai_api_key: SecretStr = Field(description="The API key for the OpenAI API.")
+    default_model: str = Field(
+        default="gpt-4o-mini",
+        description="The default model to use for the OpenAI API.",
+    )
+    rescheduling_agent_model: str = Field(
+        default="gpt-5",
+        description="The model to use for the rescheduling agent.",
+    )
+
     include_llm_messages: bool = Field(
         default=False,
         description="If False, skip LLM messages in the UI to speed up graph execution.",
