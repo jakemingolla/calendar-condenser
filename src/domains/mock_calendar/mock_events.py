@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from src.domains.mock_user.mock_user_provider import (
@@ -14,7 +13,7 @@ from src.domains.mock_user.mock_user_provider import (
 from src.types.calendar_event import CalendarEvent, CalendarEventId, CalendarEventInvitee
 
 my_first_event = CalendarEvent(
-    id=CalendarEventId(uuid4()),
+    id=CalendarEventId(1),
     title="Team Brainstorming",
     description="We will be brainstorming ideas for a new product.",
     owner=my_user_id,
@@ -29,7 +28,7 @@ my_first_event = CalendarEvent(
 )
 
 my_second_event = CalendarEvent(
-    id=CalendarEventId(uuid4()),
+    id=CalendarEventId(2),
     title="Sprint Review",
     description="We will be investigating upcoming work for the next sprint.",
     owner=my_user_id,
@@ -45,7 +44,7 @@ my_second_event = CalendarEvent(
 
 
 adams_event = CalendarEvent(
-    id=CalendarEventId(uuid4()),
+    id=CalendarEventId(3),
     title="Private Meeting",
     description="Adam will be meeting with his manager to discuss his performance.",
     owner=adams_user_id,
@@ -59,7 +58,7 @@ adams_event = CalendarEvent(
 )
 
 sallys_event = CalendarEvent(
-    id=CalendarEventId(uuid4()),
+    id=CalendarEventId(4),
     title="Customer Call",
     description="We will be calling a customer to discuss their needs.",
     owner=sallys_user_id,

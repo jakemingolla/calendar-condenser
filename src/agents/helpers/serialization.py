@@ -1,20 +1,20 @@
+from src.domains.mock_user.mock_user_provider import user_provider
 from src.types.calendar_event import CalendarEvent
 from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedRescheduledEvent
 
 
-def serialize_event(event: CalendarEvent) -> str:
-    s = f"""
-Event ID: {event.id!s}
+def serialize_event(event: CalendarEvent, *, include_id: bool = True) -> str:
+    s = f"""{f"Event ID: {event.id!s}" if include_id else ""}
 Start time: {event.start_time.strftime("%Y-%m-%d %H:%M")}
 End time: {event.end_time.strftime("%Y-%m-%d %H:%M")}
 Title: {event.title}
 Description: {event.description}
-Owner's User ID: {event.owner!s}
+Owner: {user_provider.get_user(event.owner).given_name}
 """
     if len(event.invitees) > 0:
-        s += f"Invitee IDs: {', '.join(str(invitee.id) for invitee in event.invitees)}\n"
+        s += f"Invitees: {', '.join(user_provider.get_user(invitee.id).given_name for invitee in event.invitees)}\n"
     else:
-        s += "Invitee IDs: None\n"
+        s += "Invitees: None\n"
     return s
 
 

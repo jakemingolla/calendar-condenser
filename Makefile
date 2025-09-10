@@ -10,6 +10,7 @@ help:  ## Show this help message
 	@echo "  run - Run the project"
 	@echo "  lint - Run linting"
 	@echo "  test - Run tests"
+	@echo "  test-only - Run tests with the 'only' marker"
 	@echo "  dev - Run the project in development mode"
 
 install: uv ## Install dependencies
@@ -17,6 +18,9 @@ install: uv ## Install dependencies
 
 test:  ## Run tests
 	uv run python -m pytest test/
+
+test-only:  ## Run tests with the 'only' marker
+	uv run python -m pytest -s -m only test/
 
 lint:  ## Run linters
 	uv run ruff check && uv run basedpyright
