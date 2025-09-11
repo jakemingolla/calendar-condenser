@@ -1,12 +1,12 @@
 # calendar-condenser
 
 Ever wish you could just smush your calendar events together to save space? Well, now you can!
-|Turn this...|Into this!|
-|---|---|
-|![](./docs/assets/before-rescheduling.png)|![](./docs/assets/after-rescheduling.png)|
+|Turn this...|into this...|...without lifting a finger!|
+|---|---|---|
+|![](./docs/assets/before-rescheduling.png)|![](./docs/assets/after-rescheduling.png)|![](./docs/assets/after-analysis.png)|
 
 ## Features
-
+m
 - Automagically determine the best way to move around your calendar events to save space
 - Respects conflicts of any invitees to your events and your preferred working hours
 - Integrates directly with your calendar provider like Google Calendar<sup>*</sup>
