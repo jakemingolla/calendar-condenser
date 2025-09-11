@@ -3,6 +3,7 @@
 Ever wish you could just smush your calendar events together to save space? Well, now you can!
 
 <p align="center">
+    <br />
     <i>Turn this...</i>
     <img src="./docs/assets/before-rescheduling.png" alt="Before rescheduling" width="600px" />
     <br />
