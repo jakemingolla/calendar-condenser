@@ -1,11 +1,9 @@
 # calendar-condenser
 
 Ever wish you could just smush your calendar events together to save space? Well, now you can!
-
-<p align="center">
-    <img src="./docs/assets/before-rescheduling.png" alt="Before rescheduling" width="50%" />
-    <img src="./docs/assets/after-rescheduling.png" alt="After rescheduling" width="50%" />
-</p>
+|Turn this...|Into this!|
+|---|---|
+|![](./docs/assets/before-rescheduling.png)|![](./docs/assets/after-rescheduling.png)|
 
 ## Features
 
