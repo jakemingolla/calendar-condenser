@@ -35,7 +35,7 @@ Other structured types could be added to the API in the future based on the need
 
 ## Benefits
 
-- Easy to describe how a particular node of the graph returns data to the client
+- Easy to describe how a particular node of the graph returns data to the client.
   Given I was vibe-coding the entire front-end, I needed something tangible I could automatically
   generate to ensure I was describing the graph's behavior correctly
 - Uses existing OpenAPI tools (which LLMs seem to be pretty comfortable with)
