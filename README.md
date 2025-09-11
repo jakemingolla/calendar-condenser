@@ -18,7 +18,7 @@ Ever wish you could just smush your calendar events together to save space? Well
 </p>
 
 ## Features
-m
+
 - Automagically determine the best way to move around your calendar events to save space
 - Respects conflicts of any invitees to your events and your preferred working hours
 - Analyzes message responses to determine if your proposal was accepted or rejected
