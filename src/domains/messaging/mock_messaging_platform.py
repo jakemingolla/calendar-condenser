@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from random import choice, randint, random
+from random import randint, random
 from typing import override
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -9,6 +9,7 @@ from pydantic import Field
 from src.config.main import config
 from src.types.messaging_platform import MessageReceipt, MessageReceiptNotFoundError, MessagingPlatform, MessagingPlatformId
 from src.types.user import User
+from src.utilities.sentiment import get_negative_response, get_positive_response
 
 
 def get_unlock_time() -> datetime:
@@ -17,32 +18,6 @@ def get_unlock_time() -> datetime:
         config.mock_messaging_platform_unlock_time_max_seconds,
     )
     return datetime.now(ZoneInfo("America/New_York")) + timedelta(seconds=delay)
-
-
-def get_positive_response() -> str:
-    return choice(
-        [
-            "Sure, I can do that.",
-            "Sounds good.",
-            "Yep.",
-            "I'll do it.",
-            "Works for me.",
-            "👍",
-        ],
-    )
-
-
-def get_negative_response() -> str:
-    return choice(
-        [
-            "Sorry, I can't do that.",
-            "I'm sorry, I can't do that.",
-            "Nope",
-            "no",
-            "Sorry, I'm busy then.",
-            "👎",
-        ],
-    )
 
 
 class MockMessagingPlatform(MessagingPlatform):
