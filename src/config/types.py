@@ -60,3 +60,13 @@ class Config(BaseSettings):
         le=1,  # Less than or equal to 1
         description="The probability of the mock messaging platform returning a positive response.",
     )
+    mock_messaging_platform_unlock_time_min_seconds: int = Field(
+        default=2,
+        ge=0,  # Greater than or equal to 0
+        description="The minimum number of seconds to delay the unlocking of the message. Simulates network latency.",
+    )
+    mock_messaging_platform_unlock_time_max_seconds: int = Field(
+        default=5,
+        ge=0,  # Greater than or equal to 0
+        description="The maximum number of seconds to delay the unlocking of the message. Simulates network latency.",
+    )
