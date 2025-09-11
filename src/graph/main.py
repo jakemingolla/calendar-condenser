@@ -48,7 +48,9 @@ uncompiled_graph.add_node("before_rescheduling_proposals", before_rescheduling_p
 uncompiled_graph.add_node("get_rescheduling_proposals", get_rescheduling_proposals)
 uncompiled_graph.add_node("confirm_rescheduling_proposals", confirm_rescheduling_proposals)
 uncompiled_graph.add_node("send_rescheduling_proposal_to_invitees", send_rescheduling_proposal_to_invitees)
-uncompiled_graph.add_node("invoke_send_rescheduling_proposal_to_invitee", invoke_send_rescheduling_proposal_to_invitee)  # type: ignore TODO
+# NOTE: We intentionally disable the type checker for this node because the subgraph is invoked via Send
+#       with a different input schema than the graph's.
+uncompiled_graph.add_node("invoke_send_rescheduling_proposal_to_invitee", invoke_send_rescheduling_proposal_to_invitee)  # pyright: ignore reportArgumentType
 uncompiled_graph.add_node("after_rescheduling_proposals", after_rescheduling_proposals)
 uncompiled_graph.add_node("conclusion", conclusion)
 uncompiled_graph.add_node("update_calendar", update_calendar)

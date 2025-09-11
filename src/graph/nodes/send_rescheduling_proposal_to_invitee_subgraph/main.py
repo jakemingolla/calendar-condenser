@@ -72,7 +72,7 @@ async def send_rescheduling_proposal_to_invitees(state: StateWithPendingReschedu
             "invoke_send_rescheduling_proposal_to_invitee",
             InitialState(
                 user=state.user,
-                invitee=invitee,  # TODO: Handle multiple invitees
+                invitee=invitee,
                 pending_rescheduling_proposals=state.pending_rescheduling_proposals,
             ),
         )
