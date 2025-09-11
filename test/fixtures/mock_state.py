@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from src.domains.mock_calendar.mock_calendar import my_calendar
-from src.domains.mock_user.mock_user_provider import me
+from src.domains.calendar.mock_calendar import my_calendar
+from src.domains.user.mock_user_provider import me
 from src.types.state import InitialState, StateWithCalendar, StateWithUser
 
 

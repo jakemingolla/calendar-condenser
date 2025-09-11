@@ -9,15 +9,23 @@ help:  ## Show this help message
 	@echo "  install - Install dependencies"
 	@echo "  run - Run the project"
 	@echo "  lint - Run linting"
-	@echo "  test - Run tests"
+	@echo "  test - Run all tests"
 	@echo "  test-only - Run tests with the 'only' marker"
+	@echo "  test-unit - Run unit tests"
+	@echo "  test-integration - Run integration tests"
 	@echo "  dev - Run the project in development mode"
 
 install: uv ## Install dependencies
 	uv sync --frozen
 
+test-unit:  ## Run unit tests
+	uv run python -m pytest test/unit/
+
+test-integration:  ## Run integration tests
+	uv run python -m pytest test/integration/
+
 test:  ## Run tests
-	uv run python -m pytest test/
+	@make test-unit && make test-integration
 
 test-only:  ## Run tests with the 'only' marker
 	uv run python -m pytest -s -m only test/

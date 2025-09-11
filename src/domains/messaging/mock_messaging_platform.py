@@ -1,19 +1,21 @@
-from datetime import datetime, timedelta
-from random import choice, randint
+from datetime import UTC, datetime, timedelta
+from random import choice, randint, random
 from typing import override
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from pydantic import Field
+
+from src.config.main import config
 from src.types.messaging_platform import MessageReceipt, MessageReceiptNotFoundError, MessagingPlatform, MessagingPlatformId
 from src.types.user import User
 
-message_receipt_created_at: dict[MessageReceipt, datetime] = {}
-message_receipt_unlocks_at: dict[MessageReceipt, datetime] = {}
-message_responses: dict[MessageReceipt, str] = {}
-
 
 def get_unlock_time() -> datetime:
-    delay = randint(2, 5)
+    delay = randint(
+        config.mock_messaging_platform_unlock_time_min_seconds,
+        config.mock_messaging_platform_unlock_time_max_seconds,
+    )
     return datetime.now(ZoneInfo("America/New_York")) + timedelta(seconds=delay)
 
 
@@ -45,28 +47,31 @@ def get_negative_response() -> str:
 
 class MockMessagingPlatform(MessagingPlatform):
     id: MessagingPlatformId = "slack"
+    message_receipt_created_at: dict[MessageReceipt, datetime] = Field(default_factory=dict)
+    message_receipt_unlocks_at: dict[MessageReceipt, datetime] = Field(default_factory=dict)
+    message_responses: dict[MessageReceipt, str] = Field(default_factory=dict)
 
     @override
     async def send_message(self, user: User, message: str) -> MessageReceipt:
         receipt = MessageReceipt(uuid4())
-        message_receipt_created_at[receipt] = datetime.now(ZoneInfo("America/New_York"))
-        message_receipt_unlocks_at[receipt] = get_unlock_time()
+        self.message_receipt_created_at[receipt] = datetime.now(ZoneInfo("America/New_York"))
+        self.message_receipt_unlocks_at[receipt] = get_unlock_time()
         return receipt
 
     @override
     async def get_message_response(self, receipt: MessageReceipt) -> str | None:
-        unlocks_at = message_receipt_unlocks_at.get(receipt)
+        unlocks_at = self.message_receipt_unlocks_at.get(receipt)
 
         if unlocks_at is None:
             raise MessageReceiptNotFoundError(receipt)
 
-        if unlocks_at > datetime.now(ZoneInfo("America/New_York")):
+        if unlocks_at > datetime.now(tz=UTC):
             return None
 
-        if receipt not in message_responses:
-            if choice([True, False]):
-                message_responses[receipt] = get_positive_response()
+        if receipt not in self.message_responses:
+            if random() <= config.mock_messaging_platform_positive_response_probability:
+                self.message_responses[receipt] = get_positive_response()
             else:
-                message_responses[receipt] = get_negative_response()
+                self.message_responses[receipt] = get_negative_response()
 
-        return message_responses[receipt]
+        return self.message_responses[receipt]

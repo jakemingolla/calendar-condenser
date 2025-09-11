@@ -1,8 +1,8 @@
 import pytest
 
 from src.agents.rescheduling import generate_rescheduling_proposals
-from src.domains.mock_calendar.mock_calendar import adams_calendar, my_calendar, sallys_calendar
-from src.domains.mock_user.mock_user_provider import adams_user, me, sallys_user
+from src.domains.calendar.mock_calendar import adams_calendar, my_calendar, sallys_calendar
+from src.domains.user.mock_user_provider import adams_user, me, sallys_user
 
 
 @pytest.mark.only

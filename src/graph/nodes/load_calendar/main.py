@@ -1,7 +1,7 @@
 import asyncio
 
 from src.config.main import config
-from src.domains.mock_calendar.mock_calendar import my_calendar
+from src.domains.calendar.mock_calendar import my_calendar
 from src.graph.nodes.load_calendar.types import LoadCalendarResponse
 from src.types.state import InitialState
 from src.utilities.loading import indicate_loading

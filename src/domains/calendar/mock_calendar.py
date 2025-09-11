@@ -5,8 +5,8 @@ from zoneinfo import ZoneInfo
 
 from pydantic import Field
 
-from src.domains.mock_calendar.mock_events import adams_event, my_first_event, my_second_event, sallys_event
-from src.domains.mock_user.mock_user_provider import (
+from src.domains.calendar.mock_events import adams_event, my_first_event, my_second_event, sallys_event
+from src.domains.user.mock_user_provider import (
     adams_user,
     adams_user_id,
     me,

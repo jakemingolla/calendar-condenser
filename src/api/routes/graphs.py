@@ -14,7 +14,7 @@ from langgraph.types import Command
 from langgraph.types import Interrupt as GraphInterrupt
 
 from src.api.serializers import StateSerializer
-from src.domains.mock_user.mock_user_provider import me
+from src.domains.user.mock_user_provider import me
 from src.graph.main import InitialState, uncompiled_graph
 from src.types.loading import LoadingIndicator
 from src.types.rest_api import Interrupt, Resume, StreamResponse
