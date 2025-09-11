@@ -1,4 +1,4 @@
-name: 🧪 Test Coverage
+name: 🧪 Tests
 on: pull_request
 
 jobs:

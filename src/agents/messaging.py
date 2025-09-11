@@ -1,4 +1,3 @@
-from asyncio import sleep
 from enum import StrEnum
 from typing import cast
 
@@ -7,18 +6,8 @@ from pydantic import BaseModel, Field
 from src.agents.helpers.models import get_llm
 from src.domains.messaging.mock_messaging_platform import MockMessagingPlatform
 from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
-from src.types.user import User
 
 messaging_platform = MockMessagingPlatform()
-
-
-async def generate_rescheduling_proposal_message(
-    rescheduling_proposal: PendingRescheduledEvent,
-) -> str:
-    return (
-        "I'm proposing to reschedule the event from "
-        f"{rescheduling_proposal.new_start_time} to {rescheduling_proposal.new_end_time}."
-    )
 
 
 class ReschedulingProposalResolution(StrEnum):
@@ -36,7 +25,7 @@ structured_llm = get_llm(source="messaging.structured_output").with_structured_o
     ReschedulingProposalResolutionOutput,
 )
 
-unstructured_llm = get_llm(source="messaging.public")
+unstructured_llm = get_llm(source="messaging.private")
 
 
 async def determine_rescheduling_proposal_resolution(
@@ -72,20 +61,3 @@ async def determine_rescheduling_proposal_resolution(
         return RejectedRescheduledEvent(**rescheduling_proposal.model_dump())
     msg = f"Unknown rescheduling proposal resolution: {output}"
     raise ValueError(msg)
-
-
-async def submit_rescheduling_proposal(
-    user: User,
-    rescheduled_event: PendingRescheduledEvent,
-) -> AcceptedRescheduledEvent | RejectedRescheduledEvent:
-    message = await generate_rescheduling_proposal_message(rescheduled_event)
-    receipt = await messaging_platform.send_message(user, message)
-    response: str | None = None
-
-    while response is None:
-        response = await messaging_platform.get_message_response(receipt)
-        print(f"Still waiting for a response from {user.given_name}...")
-        await sleep(1)
-
-    print(f"{user.given_name} responded with: {response}")
-    return await determine_rescheduling_proposal_resolution(rescheduled_event, message, response)

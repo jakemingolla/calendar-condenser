@@ -109,6 +109,7 @@ async def anticipate_rescheduling_proposals(state: StateWithCalendar) -> None:
             "- Explain to the user you will be generating rescheduling proposals for their calendar events.\n",
             "- Explain that you will try and find the best time to reschedule their events.\n",
             "- Indicate you are thinking very hard by using language like 'Hmmm...' or 'Let me think about this...'.\n",
+            "- Indicate this may take a bit of time, but clarify it should usually only be a few seconds.\n",
             "\n",
             formatting_rules,
         ),

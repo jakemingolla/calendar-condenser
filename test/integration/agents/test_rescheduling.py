@@ -5,7 +5,6 @@ from src.domains.calendar.mock_calendar import adams_calendar, my_calendar, sall
 from src.domains.user.mock_user_provider import adams_user, me, sallys_user
 
 
-@pytest.mark.only
 @pytest.mark.asyncio
 async def test_generate_rescheduling_proposals():
     other_invitees = [(adams_user, adams_calendar), (sallys_user, sallys_calendar)]

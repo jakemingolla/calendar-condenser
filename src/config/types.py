@@ -49,10 +49,6 @@ class Config(BaseSettings):
         default=0,
         description="The number of seconds to delay the receiving of the message. Simulates network latency.",
     )
-    delay_seconds_send_rescheduling_proposal_to_invitee_analyze_message: float = Field(
-        default=0,
-        description="The number of seconds to delay the analysis of the message. Simulates network latency.",
-    )
 
     mock_messaging_platform_positive_response_probability: float = Field(
         default=0.5,

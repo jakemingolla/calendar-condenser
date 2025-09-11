@@ -1,11 +1,10 @@
-import json
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessageChunk
 from langgraph.checkpoint.memory import InMemorySaver
@@ -100,91 +99,3 @@ async def stream(graph_id: str, thread_id: UUID, resume: Resume | None = None) -
         raise HTTPException(status_code=404, detail="Graph not found")
 
     return StreamingResponse(invoke_graph(graph, thread_id, resume), media_type="text/event-stream")
-
-
-@router.websocket("/graphs/{graph_id:str}/threads/{thread_id:uuid}/ws")
-async def websocket_stream(websocket: WebSocket, graph_id: str, thread_id: UUID) -> None:
-    """WebSocket endpoint for streaming graph execution results.
-
-    Provides the same functionality as the HTTP stream endpoint but over WebSocket:
-    - **State updates**: Changes to the state of the graph or subgraphs
-    - **AI messages**: AIMessageChunk objects containing AI-generated responses
-    - **Interrupts**: When the graph encounters an interrupt, it will wait for a resume command
-    - **Resume commands**: Client can send resume commands to continue execution
-
-    The client can send JSON messages with type "resume" to resume execution:
-    ```json
-    {
-        "type": "resume",
-        "value": "resume_value",
-        "id": "interrupt_id"
-    }
-    ```
-
-    The WebSocket will remain open and can handle multiple interrupt/resume cycles
-    during a single graph execution session.
-    """
-    await websocket.accept()
-
-    graph = graphs.get(graph_id)
-    if graph is None:
-        await websocket.close(code=1008, reason="Graph not found")
-        return
-
-    try:
-        # Start the graph execution
-        resume: Resume | None = None
-
-        while True:
-            # Run the graph execution
-            async for chunk in invoke_graph(graph, thread_id, resume):
-                await websocket.send_text(chunk)
-
-            # After graph completes, wait for resume command
-            try:
-                message = await websocket.receive_text()
-                data = json.loads(message)
-
-                if data.get("type") == "resume":
-                    resume = Resume(
-                        value=data["value"],
-                        id=data["id"],
-                    )
-                    # Continue the loop to restart the graph with resume data
-                    continue
-                # Invalid message type
-                await websocket.send_text(
-                    json.dumps(
-                        {
-                            "type": "error",
-                            "message": "Expected resume message",
-                        },
-                    ),
-                )
-                break
-
-            except json.JSONDecodeError:
-                await websocket.send_text(
-                    json.dumps(
-                        {
-                            "type": "error",
-                            "message": "Invalid JSON message",
-                        },
-                    ),
-                )
-                break
-            except WebSocketDisconnect:
-                return
-
-    except WebSocketDisconnect:
-        pass
-    except Exception as e:  # noqa: BLE001
-        await websocket.send_text(
-            json.dumps(
-                {
-                    "type": "error",
-                    "message": f"Graph execution error: {e!s}",
-                },
-            ),
-        )
-        await websocket.close(code=1011, reason="Internal server error")
