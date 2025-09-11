@@ -3,11 +3,12 @@
 Ever wish you could just smush your calendar events together to save space? Well, now you can!
 
 <p align="center">
-    <br />
     <i>Turn this...</i>
+    <br />
     <img src="./docs/assets/before-rescheduling.png" alt="Before rescheduling" width="600px" />
     <br />
     <i>Into this...</i>
+    <br />
     <img src="./docs/assets/after-rescheduling.png" alt="After rescheduling" width="600px" />
     <br />
     <i>Without lifting a finger!</i>
