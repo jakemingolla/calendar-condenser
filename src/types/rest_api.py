@@ -7,6 +7,7 @@ from src.graph.nodes.load_calendar.types import LoadCalendarResponse
 from src.graph.nodes.load_invitees.types import LoadInviteesResponse
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import (
     AnalyzeMessageResponse,
+    InvokeSendReschedulingProposalResponse,
     ReceiveMessageResponse,
     SendMessageResponse,
 )
@@ -60,7 +61,7 @@ GraphUpdate = (
     | dict[Literal["$.before_rescheduling_proposals"], None]
     | dict[Literal["$.get_rescheduling_proposals"], GetReschedulingProposalsResponse]
     | dict[Literal["$.confirm_rescheduling_proposals"], None]
-    | dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee"], None]  # TODO
+    | dict[Literal["$.invoke_send_rescheduling_proposal_to_invitee"], InvokeSendReschedulingProposalResponse]
     | dict[Literal["$.update_calendar"], None]
     | dict[Literal["$.load_calendar_after_update"], LoadCalendarResponse]
     | dict[Literal["$.conclusion"], None]

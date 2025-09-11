@@ -135,18 +135,21 @@ async def generate_rescheduling_proposals(
     if isinstance(rescheduling_proposal, ReschedulingProposal):
         rescheduled_events = []
         for event_rescheduling_proposal in rescheduling_proposal.events:
-            # Filter out events that are not owned by the user
-            event = next(
-                filter(lambda event: str(event_rescheduling_proposal.event_id) in str(event.id), users_events),
-            )  # TODO this is messy
-            rescheduled_events.append(
-                PendingRescheduledEvent(
-                    original_event=event,
-                    new_start_time=event_rescheduling_proposal.new_start_time,
-                    new_end_time=event_rescheduling_proposal.new_end_time,
-                    explanation=event_rescheduling_proposal.explanation,
-                ),
-            )
+            try:
+                # Filter out events that are not owned by the user
+                event = next(
+                    filter(lambda event: str(event_rescheduling_proposal.event_id) in str(event.id), users_events),
+                )
+                rescheduled_events.append(
+                    PendingRescheduledEvent(
+                        original_event=event,
+                        new_start_time=event_rescheduling_proposal.new_start_time,
+                        new_end_time=event_rescheduling_proposal.new_end_time,
+                        explanation=event_rescheduling_proposal.explanation,
+                    ),
+                )
+            except StopIteration:  # If the event is not found, we skip it
+                continue
         return rescheduled_events
 
     msg = f"Response is not a ReschedulingProposal object: {rescheduling_proposal}"

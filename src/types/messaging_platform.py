@@ -34,7 +34,6 @@ class MessagingPlatform(ABC, BaseModel):
         """
         raise NotImplementedError
 
-    # TODO: Handle emoji reactions
     @abstractmethod
     async def get_message_response(self: Self, receipt: MessageReceipt) -> str | None:
         """Get the user's response to a message.

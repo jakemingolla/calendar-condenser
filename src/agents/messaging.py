@@ -74,7 +74,6 @@ async def determine_rescheduling_proposal_resolution(
     raise ValueError(msg)
 
 
-# TODO better word for submit?
 async def submit_rescheduling_proposal(
     user: User,
     rescheduled_event: PendingRescheduledEvent,
