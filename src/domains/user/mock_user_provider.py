@@ -47,19 +47,14 @@ mock_users = {
     pauls_user_id: pauls_user,
 }
 
-print("Using mock users:")
-for user_id, user in mock_users.items():
-    print(f"- {user.given_name} ({user_id})")
-print()
-
 
 class MockUserProvider(UserProvider):
     @override
     def get_user(self, user_id: UserId) -> User:
-        user = mock_users[user_id]
-        if user is None:  # type: ignore[unreachable]
-            raise UserNotFoundError(user_id)
-        return user
+        try:
+            return mock_users[user_id]
+        except KeyError as e:
+            raise UserNotFoundError(user_id) from e
 
 
 user_provider = MockUserProvider()
