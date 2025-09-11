@@ -7,8 +7,8 @@ from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.analyze_mess
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.receive_message.main import receive_message
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.send_message.main import send_message
 from src.graph.nodes.send_rescheduling_proposal_to_invitee_subgraph.types import (
-    FinalState,
     InitialState,
+    InvokeSendReschedulingProposalResponse,
     StateWithMessageAnalysis,
 )
 from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedRescheduledEvent
@@ -37,7 +37,7 @@ compiled_graph = uncompiled_graph.compile()
 
 async def invoke_send_rescheduling_proposal_to_invitee(
     subgraph_input: InitialState,
-) -> FinalState:
+) -> InvokeSendReschedulingProposalResponse:
     initial_proposals = subgraph_input.pending_rescheduling_proposals
     subgraph_output = await compiled_graph.ainvoke(input=subgraph_input)
     message_analysis: MessageAnalysis = subgraph_output["message_analysis"]
@@ -49,7 +49,7 @@ async def invoke_send_rescheduling_proposal_to_invitee(
             )
             for proposal in initial_proposals
         ]
-        return FinalState(
+        return InvokeSendReschedulingProposalResponse(
             rejected_rescheduling_proposals=[],
             accepted_rescheduling_proposals=accepted_rescheduling_proposals,
         )
@@ -60,7 +60,7 @@ async def invoke_send_rescheduling_proposal_to_invitee(
             )
             for proposal in initial_proposals
         ]
-        return FinalState(
+        return InvokeSendReschedulingProposalResponse(
             rejected_rescheduling_proposals=rejected_rescheduling_proposals,
             accepted_rescheduling_proposals=[],
         )
