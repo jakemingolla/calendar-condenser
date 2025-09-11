@@ -8,11 +8,11 @@ Ever wish you could just smush your calendar events together to save space? Well
     <br />
     <img src="./docs/assets/before-rescheduling.png" alt="Before rescheduling" width="400px" />
     <br />
-    <i>Into this...</i>
+    <i>...into this...</i>
     <br />
     <img src="./docs/assets/after-rescheduling.png" alt="After rescheduling" width="400px" />
     <br />
-    <i>Without lifting a finger!</i>
+    <i>...without lifting a finger!</i>
     <br />
     <img src="./docs/assets/after-analysis.png" alt="After analysis" width="400px" />
 </p>
@@ -21,6 +21,7 @@ Ever wish you could just smush your calendar events together to save space? Well
 m
 - Automagically determine the best way to move around your calendar events to save space
 - Respects conflicts of any invitees to your events and your preferred working hours
+- Analyzes message responses to determine if your proposal was accepted or rejected
 - Integrates directly with your calendar provider like Google Calendar<sup>*</sup>
 - Sends messages directly with Slack<sup>*</sup>
 
