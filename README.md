@@ -2,6 +2,8 @@
 
 Ever wish you could just smush your calendar events together to save space? Well, now you can!
 
+![](docs/assets/before-rescheduling.png) ![](docs/assets/after-rescheduling.png)
+
 ## Features
 
 - Automagically determine the best way to move around your calendar events to save space

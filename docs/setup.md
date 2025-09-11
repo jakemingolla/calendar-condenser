@@ -29,6 +29,13 @@ source .venv/bin/activate
 uv sync --frozen
 ```
 
+## Set up environment variables
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file to set the appropriate environment variables, like your OpenAI API key.
+
 ## Test the application is working
 
 In one terminal, run the following command to start the application:
