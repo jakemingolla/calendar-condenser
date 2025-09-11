@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from src.domains.mock_user.mock_user_provider import (
+from src.domains.user.mock_user_provider import (
     adams_user,
     adams_user_id,
     me,

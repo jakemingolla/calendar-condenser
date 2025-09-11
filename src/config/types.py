@@ -53,3 +53,10 @@ class Config(BaseSettings):
         default=0,
         description="The number of seconds to delay the analysis of the message. Simulates network latency.",
     )
+
+    mock_messaging_platform_positive_response_probability: float = Field(
+        default=0.5,
+        ge=0,  # Greater than or equal to 0
+        le=1,  # Less than or equal to 1
+        description="The probability of the mock messaging platform returning a positive response.",
+    )

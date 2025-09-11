@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from src.domains.mock_user.mock_user_provider import MockUserProvider, UserNotFoundError
+from src.domains.user.mock_user_provider import MockUserProvider, UserNotFoundError
 from src.types.user import User, UserId
 
 router = APIRouter()

@@ -1,4 +1,4 @@
-from src.domains.mock_user.mock_user_provider import user_provider
+from src.domains.user.mock_user_provider import user_provider
 from src.types.calendar_event import CalendarEvent
 from src.types.rescheduled_event import AcceptedRescheduledEvent, RejectedRescheduledEvent
 

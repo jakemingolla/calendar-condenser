@@ -1,6 +1,6 @@
 from langgraph.graph import END, StateGraph
 
-from src.domains.mock_calendar.mock_calendar import my_calendar, my_first_event
+from src.domains.calendar.mock_calendar import my_calendar, my_first_event
 from src.graph.nodes.after_rescheduling_proposals.main import after_rescheduling_proposals
 from src.graph.nodes.before_rescheduling_proposals.main import before_rescheduling_proposals
 from src.graph.nodes.conclusion.main import conclusion

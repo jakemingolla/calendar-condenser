@@ -2,8 +2,8 @@ import asyncio
 
 from src.agents.rescheduling import generate_rescheduling_proposals
 from src.config.main import config
-from src.domains.mock_calendar.mock_calendar import adams_calendar, my_calendar, sallys_calendar
-from src.domains.mock_user.mock_user_provider import adams_user, me, sallys_user
+from src.domains.calendar.mock_calendar import adams_calendar, my_calendar, sallys_calendar
+from src.domains.user.mock_user_provider import adams_user, me, sallys_user
 from src.graph.nodes.get_rescheduling_proposals.types import GetReschedulingProposalsResponse
 from src.types.state import StateWithInvitees
 from src.utilities.loading import indicate_loading

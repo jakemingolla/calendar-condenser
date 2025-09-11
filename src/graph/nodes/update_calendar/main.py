@@ -2,7 +2,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from src.config.main import config
-from src.domains.mock_calendar.mock_calendar import my_calendar
+from src.domains.calendar.mock_calendar import my_calendar
 
 if TYPE_CHECKING:
     from src.types.calendar_event import CalendarEventId

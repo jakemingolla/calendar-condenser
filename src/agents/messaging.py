@@ -5,7 +5,7 @@ from typing import cast
 from pydantic import BaseModel, Field
 
 from src.agents.helpers.models import get_llm
-from src.domains.mock_messaging.mock_messaging_platform import MockMessagingPlatform
+from src.domains.messaging.mock_messaging_platform import MockMessagingPlatform
 from src.types.rescheduled_event import AcceptedRescheduledEvent, PendingRescheduledEvent, RejectedRescheduledEvent
 from src.types.user import User
 

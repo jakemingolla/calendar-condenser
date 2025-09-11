@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
-from random import choice, randint
+from datetime import UTC, datetime, timedelta
+from random import choice, randint, random
 from typing import override
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from src.config.main import config
 from src.types.messaging_platform import MessageReceipt, MessageReceiptNotFoundError, MessagingPlatform, MessagingPlatformId
 from src.types.user import User
 
@@ -60,11 +61,11 @@ class MockMessagingPlatform(MessagingPlatform):
         if unlocks_at is None:
             raise MessageReceiptNotFoundError(receipt)
 
-        if unlocks_at > datetime.now(ZoneInfo("America/New_York")):
+        if unlocks_at > datetime.now(tz=UTC):
             return None
 
         if receipt not in message_responses:
-            if choice([True, False]):
+            if random() <= config.mock_messaging_platform_positive_response_probability:
                 message_responses[receipt] = get_positive_response()
             else:
                 message_responses[receipt] = get_negative_response()
