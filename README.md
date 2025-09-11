@@ -2,7 +2,10 @@
 
 Ever wish you could just smush your calendar events together to save space? Well, now you can!
 
-![](docs/assets/before-rescheduling.png) ![](docs/assets/after-rescheduling.png)
+<p align="center">
+    <img src="./docs/assets/before-rescheduling.png" alt="Before rescheduling" width="50%" />
+    <img src="./docs/assets/after-rescheduling.png" alt="After rescheduling" width="50%" />
+</p>
 
 ## Features
 
