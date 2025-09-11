@@ -98,4 +98,10 @@ async def stream(graph_id: str, thread_id: UUID, resume: Resume | None = None) -
     if graph is None:
         raise HTTPException(status_code=404, detail="Graph not found")
 
+    # Validate thread ID exists before starting the stream
+    if resume:
+        state = await graph.aget_state(config={"configurable": {"thread_id": str(thread_id)}})
+        if state.created_at is None:
+            raise HTTPException(status_code=400, detail="Thread ID not found")
+
     return StreamingResponse(invoke_graph(graph, thread_id, resume), media_type="text/event-stream")
